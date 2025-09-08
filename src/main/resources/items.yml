@@ -1,0 +1,408 @@
+items:
+  # 🧨 Instant TNT
+  instant_tnt:
+    name: "&c&lInstant TNT"
+    material: TNT
+    lore:
+      - "&7Explodes immediately when placed"
+      - "&7No fuse delay!"
+    damage: 4.0
+    cooldown: 5
+    combat-cap: 3
+    permission: "customitems.use.instant_tnt"
+    allowed-regions:
+      - "pvp-arena"
+    custom-data:
+      type: "instant_tnt"
+      consume: true
+
+  # 🛡️ Force Field
+  force_field:
+    name: "&b&lForce Field"
+    material: GLASS
+    lore:
+      - "&7Creates a protective glass sphere"
+      - "&7around you for 10 seconds"
+    radius: 3.0
+    duration: 10
+    cooldown: 30
+    combat-cap: 1
+    permission: "customitems.use.force_field"
+    allowed-regions:
+      - "safe-zone"
+    custom-data:
+      type: "force_field"
+      consume: true
+
+  # ☃️ Exploding Snowman
+  exploding_snowman:
+    name: "&f&lExploding Snowman"
+    material: SNOWBALL
+    lore:
+      - "&7Spawns a snowman that explodes"
+      - "&7giving nearby enemies slowness"
+    damage: 3.0
+    radius: 5.0
+    duration: 5
+    cooldown: 20
+    combat-cap: 2
+    permission: "customitems.use.exploding_snowman"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "exploding_snowman"
+      consume: true
+      slowness-duration: 100
+      slowness-amplifier: 1
+
+  # 🍓 Speed Berries
+  speed_berries:
+    name: "&a&lSpeed Berries"
+    material: SWEET_BERRIES
+    lore:
+      - "&7Sweet berries that make you fast"
+      - "&7Gives Speed II for 30 seconds"
+    duration: 30
+    cooldown: 10
+    combat-cap: 5
+    permission: "customitems.use.speed_berries"
+    allowed-regions:
+      - "test_region"
+    effects:
+      speed:
+        amplifier: 1
+        duration: 30
+    custom-data:
+      type: "speed_berries"
+      consume: true
+
+  # 🌀 Illusion
+  illusion:
+    name: "&5&lIllusion"
+    material: ENDER_PEARL
+    lore:
+      - "&7Turn invisible and spawn"
+      - "&72 decoy zombies for 5 seconds"
+    duration: 5
+    cooldown: 45
+    combat-cap: 1
+    permission: "customitems.use.illusion"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    effects:
+      invisibility:
+        amplifier: 0
+        duration: 5
+    custom-data:
+      type: "illusion"
+      consume: true
+      zombie-count: 2
+      zombie-health: 4
+
+  # ✊ Golem Fists
+  golem_fists:
+    name: "&6&lGolem Fists"
+    material: IRON_INGOT
+    lore:
+      - "&7Launches nearby players upward"
+      - "&7in a small radius"
+    radius: 3.0
+    range: 7.0
+    cooldown: 25
+    combat-cap: 2
+    permission: "customitems.use.golem_fists"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "golem_fists"
+      consume: true
+
+  # 💍 Snap Ring
+  snap_ring:
+    name: "&d&lSnap Ring"
+    material: GOLD_NUGGET
+    lore:
+      - "&7Spawns evoker fangs in a circle"
+      - "&7around you to damage enemies"
+    radius: 4.0
+    damage: 12.0
+    cooldown: 20
+    combat-cap: 2
+    permission: "customitems.use.snap_ring"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "snap_ring"
+      consume: true
+
+  # 🌬️ Super Wind Charge
+  super_wind_charge:
+    name: "&e&lSuper Wind Charge"
+    material: WIND_CHARGE
+    lore:
+      - "&7Launches you much farther"
+      - "&7than a normal wind charge"
+    range: 15.0
+    radius: 8.0
+    cooldown: 10
+    combat-cap: 3
+    permission: "customitems.use.super_wind_charge"
+    allowed-regions:
+      - "test_region"
+    custom-data:
+      type: "super_wind_charge"
+      consume: true
+      launch-power: 4.5
+      upward-force: 0.6
+      particle-count: 50
+      sound-volume: 2.0
+
+  # 🔥 Fireball
+  fireball:
+    name: "&c&lFireball"
+    material: FIRE_CHARGE
+    lore:
+      - "&7Throwable fireball that explodes"
+      - "&7on impact without fire"
+    damage: 5.0
+    cooldown: 8
+    combat-cap: 4
+    permission: "customitems.use.fireball"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "fireball"
+      consume: true
+      projectile-speed: 2.0
+
+  # 🪵 Healing Campfire
+  healing_campfire:
+    name: "&a&lHealing Campfire"
+    material: CAMPFIRE
+    lore:
+      - "&7Placeable campfire that heals"
+      - "&7only you when you stand near it"
+    radius: 3.0
+    duration: 30
+    cooldown: 60
+    combat-cap: 1
+    permission: "customitems.use.healing_campfire"
+    allowed-regions:
+      - "test_region"
+      - "safe-zone"
+    custom-data:
+      type: "healing_campfire"
+      consume: true
+      heal-amount: 1
+
+  # 💣 Dynamite
+  dynamite:
+    name: "&c&lDynamite"
+    material: STICK
+    lore:
+      - "&7Throwable TNT with 1 second"
+      - "&7cooldown that explodes on impact"
+    damage: 4.0
+    cooldown: 1
+    combat-cap: 10
+    permission: "customitems.use.dynamite"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "dynamite"
+      consume: true
+
+  # 🦘 Leap
+  leap:
+    name: "&a&lLeap"
+    material: RABBIT_FOOT
+    lore:
+      - "&7Launches you 7 blocks forward"
+      - "&7in the direction you're looking"
+    range: 7.0
+    cooldown: 30
+    combat-cap: 2
+    permission: "customitems.use.leap"
+    allowed-regions:
+      - "test_region"
+    custom-data:
+      type: "leap"
+      consume: true
+
+  # 💀 Creeper
+  creeper:
+    name: "&2&lCreeper"
+    material: CREEPER_HEAD
+    lore:
+      - "&7Moves randomly for 3 seconds"
+      - "&7then explodes like instant TNT"
+    damage: 4.0
+    duration: 3
+    cooldown: 25
+    combat-cap: 2
+    permission: "customitems.use.creeper"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "creeper"
+      consume: true
+
+  # 🧛 Vampire Sword
+  vampire_sword:
+    name: "&4&lVampire Sword"
+    material: IRON_SWORD
+    lore:
+      - "&7Iron Sword with Sharpness VI"
+      - "&7Heals you on enemy kill"
+    damage: 6.0
+    cooldown: 0
+    combat-cap: 1
+    permission: "customitems.use.vampire_sword"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    enchantments:
+      sharpness: 6
+    custom-data:
+      type: "vampire_sword"
+      consume: false
+      heal-on-kill: 4
+
+  # 🥚 Egg Bridger
+  egg_bridger:
+    name: "&e&lEgg Bridger"
+    material: EGG
+    lore:
+      - "&7Throws eggs that generate a bridge"
+      - "&7behind them on flight path"
+    cooldown: 15
+    combat-cap: 3
+    permission: "customitems.use.egg_bridger"
+    allowed-regions:
+      - "test_region"
+    custom-data:
+      type: "egg_bridger"
+      consume: true
+      disappear-blocks: true
+      block-duration: 20
+      block-type: "COBBLESTONE"
+
+  # ❄️ Ice Fire
+  ice_fire:
+    name: "&b&lIce Fire"
+    material: SOUL_CAMPFIRE
+    lore:
+      - "&7Soul campfire that applies"
+      - "&7Slowness to nearby enemies"
+    radius: 4.0
+    duration: 30
+    cooldown: 45
+    combat-cap: 1
+    permission: "customitems.use.ice_fire"
+    allowed-regions:
+      - "test_region"
+      - "safe-zone"
+    custom-data:
+      type: "ice_fire"
+      consume: true
+      slowness-duration: 60
+      slowness-amplifier: 2
+
+  # ⛄ Slowness Snowball
+  slowness_snowball:
+    name: "&f&lSlowness Snowball"
+    material: SNOWBALL
+    lore:
+      - "&7When hit, players receive"
+      - "&7Slowness for 3 seconds"
+    cooldown: 5
+    combat-cap: 8
+    permission: "customitems.use.slowness_snowball"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "slowness_snowball"
+      consume: true
+
+  # 🔄 Swap Ball
+  swap_ball:
+    name: "&5&lSwap Ball"
+    material: ENDER_PEARL
+    lore:
+      - "&7On hit, swaps positions"
+      - "&7with the target player"
+    cooldown: 20
+    combat-cap: 2
+    permission: "customitems.use.swap_ball"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "swap_ball"
+      consume: true
+
+  # 🎯 Homing Dart
+  homing_dart:
+    name: "&c&lHoming Dart"
+    material: ARROW
+    lore:
+      - "&7Slow-moving projectile that"
+      - "&7homes in on the target"
+    damage: 6.0
+    cooldown: 30
+    combat-cap: 1
+    permission: "customitems.use.homing_dart"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "homing_dart"
+      consume: true
+
+  # 🐝 Beekeeper
+  beekeeper:
+    name: "&e&lBeekeeper"
+    material: HONEYCOMB
+    lore:
+      - "&7Turns ground into honey blocks"
+      - "&7and spawns 3 angry bees"
+    radius: 3.0
+    duration: 7
+    cooldown: 40
+    combat-cap: 1
+    permission: "customitems.use.beekeeper"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "beekeeper"
+      consume: true
+      honey-block-type: "HONEY_BLOCK"
+      bee-count: 3
+      bee-duration: 30
+
+  # 💨 Smoke Bomb
+  smoke_bomb:
+    name: "&8&lSmoke Bomb"
+    material: FIREWORK_ROCKET
+    lore:
+      - "&7Creates heavy smoke coverage"
+      - "&7for maximum concealment"
+    duration: 12
+    radius: 5.0
+    cooldown: 45
+    combat-cap: 1
+    permission: "customitems.use.smoke_bomb"
+    allowed-regions:
+      - "test_region"
+    custom-data:
+      type: "smoke_bomb"
+      consume: true

@@ -1,0 +1,42 @@
+
+messages:
+  prefix: "&8[&6CustomItems&8]&r "
+
+  no-permission: "{prefix}&cYou don't have permission to use this item!"
+
+  item:
+    on-cooldown: "{prefix}&cThis item is on cooldown for &e{time} seconds&c!"
+
+  combat:
+    entered: "{prefix}&cYou are now in combat!"
+    cannot-use-item: "{prefix}&cYou cannot use &e{item} &cwhile in combat!"
+    cap-applied: "{prefix}&cYour &e{item} &chas been limited to &e{cap} &c(removed {removed} items)!"
+    action-bar: "&cCombat: &e{time}s"
+
+  region:
+    not-allowed: "{prefix}&cYou cannot use this item in this region!"
+    not-allowed-specific: "{prefix}&cThis item can only be used in: &e{regions}"
+
+  cooldown:
+    action-bar: "&e{item} &7cooldown: &c{time}s"
+
+  admin:
+    reload-success: "{prefix}&aPlugin reloaded successfully!"
+    item-given: "{prefix}&aGiven &6{amount}x {item} &ato &6{player}&a!"
+    item-not-found: "{prefix}&cCustom item '&e{item}&c' not found!"
+    player-not-found: "{prefix}&cPlayer '&e{player}&c' not found!"
+
+  list:
+    header: "{prefix}&aCustom Items:"
+    item: "&7- &e{item} &7(ID: &f{id}&7)"
+    footer: "&7Total: &e{count} &7items"
+
+  vampire-sword:
+    healed: "&aVampire Sword healed you for &c{amount} &ahealth!"
+
+combat:
+  entered: "{prefix}&cYou are now in combat!"
+  cannot-use-item: "{prefix}&cYou cannot use &e{item} &cwhile in combat!"
+  cap-applied: "{prefix}&cYour &e{item} &chas been limited to &e{cap} &c(removed {removed} items)!"
+  regular-cap-applied: "{prefix}&cYour &e{item} &chas been limited to &e{cap} &c(removed {removed} items)!"
+  action-bar: "&cCombat: &e{time}s"

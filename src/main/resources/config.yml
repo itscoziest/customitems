@@ -1,0 +1,29 @@
+# General Settings
+debug: false
+
+# Cooldown Display Settings
+cooldown:
+  display:
+    action-bar:
+      enabled: true
+    item-name:
+      enabled: false
+
+# Combat System Settings
+combat:
+  duration: 15 # seconds
+  cap:
+    enabled: true
+
+# Region System Settings
+region:
+  whitelist:
+    enabled: true
+
+# Regular Items Combat Caps
+regular-items:
+  combat-caps:
+    enabled: true
+    items:
+      FIREWORK_ROCKET: 12
+      TRIDENT: 1

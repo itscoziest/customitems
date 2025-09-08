@@ -1,0 +1,44 @@
+name: CustomItems
+version: '${version}'
+description: 'Fully customizable combat and utility items plugin'
+author: StrikesDev
+main: com.strikesdev.customitems.CustomItems
+api-version: 1.20
+depend: []
+softdepend: [WorldGuard, PlaceholderAPI]
+
+commands:
+  customitems:
+    description: 'Main CustomItems command'
+    usage: '/customitems <reload|give|list>'
+    permission: customitems.admin
+    aliases: [ci, citems]
+
+permissions:
+  customitems.*:
+    description: 'All CustomItems permissions'
+    children:
+      customitems.admin: true
+      customitems.use.*: true
+      customitems.bypass.*: true
+    default: op
+
+  customitems.admin:
+    description: 'Admin permissions for CustomItems'
+    default: op
+
+  customitems.use.*:
+    description: 'Permission to use all custom items'
+    default: true
+
+  customitems.bypass.combat:
+    description: 'Bypass combat restrictions'
+    default: op
+
+  customitems.bypass.region:
+    description: 'Bypass region restrictions'
+    default: op
+
+  customitems.bypass.cooldown:
+    description: 'Bypass cooldown restrictions'
+    default: op

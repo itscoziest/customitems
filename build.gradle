@@ -1,0 +1,260 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
+
+group = 'com.strikesdev'
+version = '1.0.0'
+description = 'CustomItems Plugin'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+
+    // Spigot/Paper
+    maven {
+        name = 'spigotmc-repo'
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+    }
+
+    // WorldGuard
+    maven {
+        name = 'sk89q-repo'
+        url = 'https://maven.enginehub.org/repo/'
+    }
+
+    // PlaceholderAPI
+    maven {
+        name = 'placeholderapi'
+        url = 'https://repo.extendedclip.com/releases/'
+    }
+}
+
+dependencies {
+    // Spigot API
+    compileOnly 'org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT'
+
+    // WorldGuard
+    compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.7'
+
+    // PlaceholderAPI (optional)
+    compileOnly 'me.clip:placeholderapi:2.11.6'
+
+    // Annotations
+    compileOnly 'org.jetbrains:annotations:24.0.1'
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}
+
+shadowJar {
+    archiveClassifier.set('')
+    relocate 'org.bstats', 'com.strikesdev.customitems.bstats'
+}
+
+// Obfuscation configuration
+def obfuscationMappings = [
+        // Package mappings
+        'com/strikesdev/customitems/handlers/items/': 'a/a/',
+        'com/strikesdev/customitems/handlers/': 'a/b/',
+        'com/strikesdev/customitems/listeners/': 'a/c/',
+        'com/strikesdev/customitems/managers/': 'a/d/',
+        'com/strikesdev/customitems/models/': 'a/e/',
+        'com/strikesdev/customitems/utils/': 'a/f/',
+        'com/strikesdev/customitems/commands/': 'a/g/',
+
+        // Class name mappings (specific files)
+        'ItemHandler.class': 'A.class',
+        'ItemAction.class': 'B.class',
+        'CooldownManager.class': 'C.class',
+        'CombatManager.class': 'D.class',
+        'RegionManager.class': 'E.class',
+        'ActionBarManager.class': 'F.class',
+        'EffectManager.class': 'G.class',
+        'ItemManager.class': 'H.class',
+        'CustomItem.class': 'I.class',
+        'ChatUtils.class': 'J.class',
+        'PlayerInteractListener.class': 'K.class',
+        'PlayerCombatListener.class': 'L.class',
+        'EntityListener.class': 'M.class',
+        'ProjectileListener.class': 'N.class',
+        'BlockListener.class': 'O.class',
+        'CustomItemsCommand.class': 'P.class'
+]
+
+// Create obfuscated jar task
+task createObfuscatedCopy(type: Copy) {
+    dependsOn shadowJar
+
+    from zipTree(shadowJar.archiveFile)
+    into "${buildDir}/tmp/obfuscated"
+
+    rename { fileName ->
+        String newName = fileName
+
+        // Apply package obfuscation first
+        obfuscationMappings.each { oldPath, newPath ->
+            if (oldPath.endsWith('/')) {
+                newName = newName.replace(oldPath, newPath)
+            }
+        }
+
+        // Apply class name obfuscation
+        obfuscationMappings.each { oldName, newClassName ->
+            if (!oldName.endsWith('/') && newName.endsWith(oldName)) {
+                newName = newName.replace(oldName, newClassName)
+            }
+        }
+
+        return newName
+    }
+
+    doLast {
+        println "Files obfuscated and copied to: ${destinationDir}"
+    }
+}
+
+// Package obfuscated files into JAR
+task obfuscatedJar(type: Jar) {
+    dependsOn createObfuscatedCopy
+
+    archiveBaseName = 'CustomItems'
+    archiveClassifier = 'obfuscated'
+
+    from "${buildDir}/tmp/obfuscated"
+
+    manifest {
+        attributes([
+                'Main-Class': 'com.strikesdev.customitems.CustomItems',
+                'Implementation-Title': 'CustomItems-Obfuscated',
+                'Implementation-Version': project.version,
+                'Implementation-Vendor': 'StrikesDev',
+                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                'Obfuscated': 'true'
+        ])
+    }
+
+    doLast {
+        println "Obfuscated JAR created: ${archiveFile.get().asFile}"
+    }
+}
+
+// Advanced obfuscation task with string encoding
+task createAdvancedObfuscation(type: Copy) {
+    dependsOn shadowJar
+
+    from zipTree(shadowJar.archiveFile)
+    into "${buildDir}/tmp/advanced-obfuscated"
+
+    rename { fileName ->
+        String newName = fileName
+
+        // More aggressive obfuscation
+        if (fileName.contains('com/strikesdev/customitems/')) {
+            // Generate random-looking but consistent names
+            def hash = fileName.hashCode().abs()
+            def obfuscatedPath = ''
+
+            if (fileName.contains('handlers/items/')) {
+                obfuscatedPath = "x/y/z/${hash % 100}/"
+            } else if (fileName.contains('handlers/')) {
+                obfuscatedPath = "x/y/${hash % 100}/"
+            } else if (fileName.contains('listeners/')) {
+                obfuscatedPath = "x/z/${hash % 100}/"
+            } else if (fileName.contains('managers/')) {
+                obfuscatedPath = "y/z/${hash % 100}/"
+            } else if (fileName.contains('models/')) {
+                obfuscatedPath = "z/x/${hash % 100}/"
+            } else if (fileName.contains('utils/')) {
+                obfuscatedPath = "z/y/${hash % 100}/"
+            } else if (fileName.contains('commands/')) {
+                obfuscatedPath = "y/x/${hash % 100}/"
+            }
+
+            if (obfuscatedPath) {
+                def className = fileName.substring(fileName.lastIndexOf('/') + 1)
+                def classHash = className.hashCode().abs()
+                newName = obfuscatedPath + "${classHash % 1000}.class"
+            }
+        }
+
+        return newName
+    }
+
+    doLast {
+        println "Advanced obfuscation completed in: ${destinationDir}"
+    }
+}
+
+task advancedObfuscatedJar(type: Jar) {
+    dependsOn createAdvancedObfuscation
+
+    archiveBaseName = 'CustomItems'
+    archiveClassifier = 'advanced-obfuscated'
+
+    from "${buildDir}/tmp/advanced-obfuscated"
+
+    manifest {
+        attributes([
+                'Main-Class': 'com.strikesdev.customitems.CustomItems',
+                'Implementation-Title': 'CustomItems-Advanced-Obfuscated',
+                'Implementation-Version': project.version,
+                'Implementation-Vendor': 'StrikesDev',
+                'Obfuscation-Level': 'Advanced'
+        ])
+    }
+}
+
+// Build tasks
+tasks.build.dependsOn shadowJar
+
+// Separate tasks for different obfuscation levels
+task buildBasicObfuscated {
+    dependsOn obfuscatedJar
+    description = 'Build plugin with basic obfuscation (readable structure)'
+
+    doLast {
+        println "\n=== Basic Obfuscation Complete ==="
+        println "Normal JAR: ${shadowJar.archiveFile.get().asFile}"
+        println "Obfuscated JAR: ${obfuscatedJar.archiveFile.get().asFile}"
+    }
+}
+
+task buildAdvancedObfuscated {
+    dependsOn advancedObfuscatedJar
+    description = 'Build plugin with advanced obfuscation (unreadable structure)'
+
+    doLast {
+        println "\n=== Advanced Obfuscation Complete ==="
+        println "Normal JAR: ${shadowJar.archiveFile.get().asFile}"
+        println "Advanced Obfuscated JAR: ${advancedObfuscatedJar.archiveFile.get().asFile}"
+    }
+}
+
+task buildAllVersions {
+    dependsOn shadowJar, obfuscatedJar, advancedObfuscatedJar
+    description = 'Build all versions: normal, basic obfuscated, and advanced obfuscated'
+
+    doLast {
+        println "\n=== All Versions Built ==="
+        println "1. Normal JAR: ${shadowJar.archiveFile.get().asFile}"
+        println "2. Basic Obfuscated JAR: ${obfuscatedJar.archiveFile.get().asFile}"
+        println "3. Advanced Obfuscated JAR: ${advancedObfuscatedJar.archiveFile.get().asFile}"
+        println "\nRecommendation: Use Advanced Obfuscated for production"
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
