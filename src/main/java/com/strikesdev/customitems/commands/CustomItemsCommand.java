@@ -11,6 +11,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material;
+import org.bukkit.Bukkit;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -135,6 +136,10 @@ public class CustomItemsCommand implements CommandExecutor, TabCompleter {
 
         ItemStack itemStack = customItem.createItemStack(amount);
         target.getInventory().addItem(itemStack);
+// Schedule cap check for next tick to avoid multiple triggers
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            plugin.getCombatManager().applyCombatCaps(target);
+        }, 1L);
 
         // Get the base message without colorizing yet
         String baseMessage = plugin.getConfigManager().getMessagesConfig()

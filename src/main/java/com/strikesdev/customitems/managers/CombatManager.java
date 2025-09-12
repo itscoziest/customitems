@@ -23,9 +23,7 @@ public class CombatManager {
     }
 
     public void enterCombat(Player player) {
-        if (player.hasPermission("customitems.bypass.combat")) {
-            return;
-        }
+
 
         UUID playerId = player.getUniqueId();
         int combatDuration = plugin.getConfigManager().getCombatDuration();
@@ -45,9 +43,7 @@ public class CombatManager {
     }
 
     public boolean isInCombat(Player player) {
-        if (player.hasPermission("customitems.bypass.combat")) {
-            return false;
-        }
+
 
         UUID playerId = player.getUniqueId();
         Long combatEnd = combatPlayers.get(playerId);
@@ -74,9 +70,7 @@ public class CombatManager {
     }
 
     public long getRemainingCombatTime(Player player) {
-        if (player.hasPermission("customitems.bypass.combat")) {
-            return 0;
-        }
+
 
         UUID playerId = player.getUniqueId();
         Long combatEnd = combatPlayers.get(playerId);
@@ -93,7 +87,7 @@ public class CombatManager {
         return (int) Math.ceil(getRemainingCombatTime(player) / 1000.0);
     }
 
-    private void applyCombatCaps(Player player) {
+    public void applyCombatCaps(Player player) {
         if (!plugin.getConfigManager().isCombatCapEnabled()) {
             return;
         }

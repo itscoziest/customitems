@@ -15,6 +15,8 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.entity.EnderPearl;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EvokerFangs;
+import org.bukkit.entity.Wolf;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
 
 // Entity Listener for vampire sword and other entity interactions
@@ -63,6 +65,38 @@ public class EntityListener implements Listener {
             }
         }
     }
+
+
+
+    @EventHandler
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        // Handle dog army combat behavior
+        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
+            Player attacker = (Player) event.getDamager();
+            Player victim = (Player) event.getEntity();
+
+            // Make attacker's dogs target the victim
+            makeDogsTarget(attacker, victim);
+
+            // Make victim's dogs target the attacker
+            makeDogsTarget(victim, attacker);
+        }
+    }
+
+    private void makeDogsTarget(Player owner, Player target) {
+        // Find all wolves owned by the owner within range
+        owner.getWorld().getEntities().stream()
+                .filter(entity -> entity instanceof Wolf)
+                .map(entity -> (Wolf) entity)
+                .filter(wolf -> wolf.isTamed() && wolf.getOwner() != null && wolf.getOwner().equals(owner))
+                .filter(wolf -> wolf.getLocation().distance(owner.getLocation()) <= 50)
+                .forEach(wolf -> {
+                    wolf.setTarget(target);
+                    wolf.setAngry(true);
+                });
+    }
+
+
 
     @EventHandler
     public void onEvokerFangsDamage(EntityDamageByEntityEvent event) {

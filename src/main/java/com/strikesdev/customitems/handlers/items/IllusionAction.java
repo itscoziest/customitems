@@ -107,8 +107,18 @@ public class IllusionAction implements ItemAction {
             plugin.getEffectManager().registerTemporaryEntity(zombie, item.getDuration());
         }
 
-        // Consume item
-        consumeItem(player, event);
+        if (event.getItem() != null) {
+            if (event.getItem().getAmount() > 1) {
+                event.getItem().setAmount(event.getItem().getAmount() - 1);
+            } else {
+                if (player.getInventory().getItemInMainHand().equals(event.getItem())) {
+                    player.getInventory().setItemInMainHand(null);
+                } else if (player.getInventory().getItemInOffHand().equals(event.getItem())) {
+                    player.getInventory().setItemInOffHand(null);
+                }
+            }
+        }
+
         return true;
     }
 
@@ -134,11 +144,11 @@ public class IllusionAction implements ItemAction {
 
 
     private void equipZombie(Zombie zombie) {
-        zombie.getEquipment().setHelmet(new ItemStack(Material.NETHERITE_HELMET));
-        zombie.getEquipment().setChestplate(new ItemStack(Material.NETHERITE_CHESTPLATE));
-        zombie.getEquipment().setLeggings(new ItemStack(Material.NETHERITE_LEGGINGS));
-        zombie.getEquipment().setBoots(new ItemStack(Material.NETHERITE_BOOTS));
-        zombie.getEquipment().setItemInMainHand(new ItemStack(Material.NETHERITE_SWORD));
+        zombie.getEquipment().setHelmet(new ItemStack(Material.DIAMOND_HELMET));
+        zombie.getEquipment().setChestplate(new ItemStack(Material.DIAMOND_CHESTPLATE));
+        zombie.getEquipment().setLeggings(new ItemStack(Material.DIAMOND_LEGGINGS));
+        zombie.getEquipment().setBoots(new ItemStack(Material.DIAMOND_BOOTS));
+        zombie.getEquipment().setItemInMainHand(new ItemStack(Material.DIAMOND_SWORD));
 
         // Add enchantments
         zombie.getEquipment().getHelmet().addUnsafeEnchantment(org.bukkit.enchantments.Enchantment.PROTECTION_ENVIRONMENTAL, 4);

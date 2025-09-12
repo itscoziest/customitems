@@ -1,4 +1,3 @@
-
 messages:
   prefix: "&8[&6CustomItems&8]&r "
 
@@ -33,6 +32,38 @@ messages:
 
   vampire-sword:
     healed: "&aVampire Sword healed you for &c{amount} &ahealth!"
+
+  strength-cookie:
+    consumed: "&6You feel incredibly strong after eating the delicious cookie!"
+
+  haste-potion:
+    consumed: "&eThe sweet honey energizes you for faster work!"
+
+  explosive-crossbow:
+    shot: "&cYour explosive arrow is ready to detonate!"
+
+  lightning-wand:
+    struck: "&eYou channel lightning from the heavens!"
+
+  sonic-boom:
+    unleashed: "&9You unleash a devastating sonic boom!"
+
+  dragon-breath:
+    launched: "&5You unleash the dragon's fury!"
+
+  dog-army:
+    summoned: "&6You summon a loyal pack of guard dogs!"
+
+  lasso:
+    success: "&eYou successfully lassoed your target!"
+    too-far: "&cTarget is too far away to lasso!"
+
+  taser:
+    stunned: "&eYou successfully stunned your target!"
+    hit: "&cYou've been tased and are temporarily stunned!"
+
+  grave-digger:
+    summoned: "&8You summon a spectral grave digger!"
 
 combat:
   entered: "{prefix}&cYou are now in combat!"

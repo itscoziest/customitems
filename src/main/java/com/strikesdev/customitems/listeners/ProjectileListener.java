@@ -13,7 +13,15 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.ChatColor;
+import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.metadata.FixedMetadataValue;
 import com.strikesdev.customitems.models.CustomItem;
+import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Fireball;
+import org.bukkit.event.entity.EntityShootBowEvent;
 
 
 // Projectile Listener for custom projectiles
@@ -26,31 +34,79 @@ public class ProjectileListener implements Listener {
 
     @EventHandler
     public void onProjectileHit(ProjectileHitEvent event) {
-        // Handle custom projectile impacts
-        if (event.getEntity().hasMetadata("custom_item")) {
-            String itemType = event.getEntity().getMetadata("custom_item").get(0).asString();
+        if (!(event.getEntity() instanceof Arrow)) return;
 
-            switch (itemType) {
-                case "fireball":
-                    handleFireballHit(event);
-                    break;
-                case "dynamite":
-                    handleDynamiteHit(event);
-                    break;
-                case "slowness_snowball":
-                    handleSlownessSnowballHit(event);
-                    break;
-                case "swap_ball":
-                    handleSwapBallHit(event);
-                    break;
-                case "homing_dart":
-                    handleHomingDartHit(event);
-                    break;
-                case "super_wind_charge":
-                    handleSuperWindChargeHit(event);
-                    break;
+        Arrow arrow = (Arrow) event.getEntity();
+
+        // Check if this is an explosive arrow
+        if (arrow.hasMetadata("explosive_arrow")) {
+            // Get explosion power
+            double explosionPower = arrow.getMetadata("explosion_power").get(0).asDouble();
+
+            // Create explosion at arrow location
+            Location loc = arrow.getLocation();
+            loc.getWorld().createExplosion(loc, (float) explosionPower, false, false);
+
+            // Add visual effects
+            loc.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, loc, 1);
+            loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
+
+            // Remove the arrow
+            arrow.remove();
+        }
+    }
+
+
+    @EventHandler
+    public void onCrossbowShoot(EntityShootBowEvent event) {
+        if (!(event.getEntity() instanceof Player)) return;
+        if (event.getBow() == null) return;
+
+        Player player = (Player) event.getEntity();
+
+        // Check if they're using an explosive crossbow
+        if (plugin.getItemManager().isCustomItem(event.getBow())) {
+            CustomItem item = plugin.getItemManager().getCustomItem(event.getBow());
+            if (item != null && "explosive_crossbow".equals(item.getCustomDataString("type", ""))) {
+                // Mark the projectile as explosive
+                if (event.getProjectile() instanceof Arrow) {
+                    Arrow arrow = (Arrow) event.getProjectile();
+                    double explosionPower = item.getCustomDataDouble("explosion-power", 2.0);
+
+                    arrow.setMetadata("explosive_arrow", new FixedMetadataValue(plugin, true));
+                    arrow.setMetadata("explosion_power", new FixedMetadataValue(plugin, explosionPower));
+
+                    // Visual trail
+                    createExplosiveTrail(arrow);
+
+                }
             }
         }
+    }
+
+    @EventHandler
+    public void onFireballHit(ProjectileHitEvent event) {
+        if (!(event.getEntity() instanceof Fireball)) return;
+
+        Fireball fireball = (Fireball) event.getEntity();
+
+        // Check if this is a grave digger fireball
+        if (fireball.hasMetadata("grave_digger")) {
+            // Cancel the hit event to prevent normal fireball explosion/despawn
+            event.setCancelled(true);
+
+            // Don't remove the fireball - let it continue through blocks
+            // The timer in GraveDiggerAction will handle removal
+        }
+    }
+
+    private void createExplosiveTrail(Arrow arrow) {
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (!arrow.isValid() || arrow.isDead()) {
+                return;
+            }
+            arrow.getWorld().spawnParticle(Particle.FLAME, arrow.getLocation(), 2, 0.1, 0.1, 0.1, 0);
+        }, 0L, 2L);
     }
 
     private void handleFireballHit(ProjectileHitEvent event) {
@@ -89,6 +145,146 @@ public class ProjectileListener implements Listener {
                 (float) damage, false, true, owner);
     }
 
+
+    @EventHandler
+    public void onDragonFireballHit(ProjectileHitEvent event) {
+        if (!(event.getEntity() instanceof DragonFireball)) return;
+
+        DragonFireball fireball = (DragonFireball) event.getEntity();
+
+        // Check if this is our custom dragon breath
+        if (!fireball.hasMetadata("custom_dragon_breath")) return;
+
+        Location hitLocation = fireball.getLocation();
+
+        // Get stored metadata
+        double damage = fireball.getMetadata("breath_damage").get(0).asDouble();
+        int duration = fireball.getMetadata("breath_duration").get(0).asInt();
+        String casterUUID = fireball.getMetadata("breath_caster").get(0).asString();
+
+        Player caster = Bukkit.getPlayer(java.util.UUID.fromString(casterUUID));
+
+        // Create area effect cloud (lingering dragon breath)
+        AreaEffectCloud cloud = hitLocation.getWorld().spawn(hitLocation, AreaEffectCloud.class);
+
+        // Configure the cloud like dragon breath
+        cloud.setRadius(3.0f);
+        cloud.setDuration(duration);
+        cloud.setRadiusOnUse(0f);
+        cloud.setRadiusPerTick(0.02f);
+        cloud.setParticle(Particle.DRAGON_BREATH);
+        cloud.setColor(Color.PURPLE);
+
+        if (caster != null) {
+            cloud.setSource(caster);
+        }
+
+        // Add harmful effect (instant damage every tick)
+        cloud.addCustomEffect(new PotionEffect(PotionEffectType.HARM, 1, 0), true);
+
+        // Play explosion sound and effects
+        hitLocation.getWorld().playSound(hitLocation, Sound.ENTITY_ENDER_DRAGON_HURT, 1.0f, 0.8f);
+        hitLocation.getWorld().spawnParticle(Particle.DRAGON_BREATH, hitLocation, 50, 2, 1, 2, 0.1);
+
+        // Remove the fireball
+        fireball.remove();
+    }
+
+
+
+    @EventHandler
+    public void onLassoHit(ProjectileHitEvent event) {
+        if (!(event.getEntity() instanceof Arrow)) return;
+
+        Arrow arrow = (Arrow) event.getEntity();
+
+        // Check if this is a lasso arrow
+        if (!arrow.hasMetadata("lasso_arrow")) return;
+
+        // Get the caster
+        String casterUUID = arrow.getMetadata("lasso_caster").get(0).asString();
+        Player caster = Bukkit.getPlayer(java.util.UUID.fromString(casterUUID));
+
+        if (caster == null) {
+            arrow.remove();
+            return;
+        }
+
+        // Check if we hit a player
+        if (event.getHitEntity() instanceof Player) {
+            Player target = (Player) event.getHitEntity();
+
+            if (target.equals(caster)) {
+                arrow.remove();
+                return; // Don't lasso yourself
+            }
+
+            // Get lasso settings
+            double basePullStrength = arrow.getMetadata("pull_strength").get(0).asDouble();
+            double maxRange = arrow.getMetadata("max_range").get(0).asDouble();
+            boolean distanceBased = arrow.getMetadata("distance_based").get(0).asBoolean();
+
+            // Calculate distance
+            double distance = caster.getLocation().distance(target.getLocation());
+
+            if (distance > maxRange) {
+                caster.sendMessage(ChatColor.RED + "Target is too far away!");
+                arrow.remove();
+                return;
+            }
+
+            // Calculate pull strength based on distance if enabled
+            double pullStrength = basePullStrength;
+            if (distanceBased) {
+                // Stronger pull for longer distances (up to 2x strength)
+                pullStrength = basePullStrength * (1.0 + (distance / maxRange));
+            }
+
+            // Calculate pull vector (from target to caster)
+            Vector pullVector = caster.getLocation().toVector()
+                    .subtract(target.getLocation().toVector())
+                    .normalize()
+                    .multiply(pullStrength);
+
+            // Add some upward force to help with terrain
+            pullVector.setY(pullVector.getY() + 0.3);
+
+            // Apply the pull
+            target.setVelocity(pullVector);
+
+            // Effects
+            target.playSound(target.getLocation(), Sound.ENTITY_FISHING_BOBBER_RETRIEVE, 1.0f, 1.0f);
+            caster.playSound(caster.getLocation(), Sound.ENTITY_FISHING_BOBBER_RETRIEVE, 1.0f, 1.0f);
+
+            // Visual effects
+            Location targetLoc = target.getLocation().add(0, 1, 0);
+            targetLoc.getWorld().spawnParticle(Particle.CRIT, targetLoc, 15, 0.5, 0.5, 0.5, 0.1);
+
+            // Create a line effect between caster and target
+            createLassoLineEffect(caster.getLocation(), target.getLocation());
+
+            // Message
+            caster.sendMessage(ChatColor.GOLD + "Lassoed " + target.getName() + "!");
+            target.sendMessage(ChatColor.RED + "You've been lassoed by " + caster.getName() + "!");
+        }
+
+        // Remove the arrow
+        arrow.remove();
+    }
+
+    private void createLassoLineEffect(Location from, Location to) {
+        Vector direction = to.toVector().subtract(from.toVector());
+        double distance = direction.length();
+        direction.normalize();
+
+        for (double i = 0; i < distance; i += 0.5) {
+            Location particleLoc = from.clone().add(direction.clone().multiply(i));
+            particleLoc.getWorld().spawnParticle(Particle.CRIT, particleLoc, 1, 0, 0, 0, 0);
+        }
+    }
+
+
+
     private void handleSlownessSnowballHit(ProjectileHitEvent event) {
         if (event.getHitEntity() instanceof Player) {
             Player hitPlayer = (Player) event.getHitEntity();
@@ -103,6 +299,96 @@ public class ProjectileListener implements Listener {
             hitPlayer.playSound(hitPlayer.getLocation(), Sound.ENTITY_PLAYER_HURT_FREEZE, 1.0f, 1.2f);
         }
     }
+
+
+    @EventHandler
+    public void onTaserHit(ProjectileHitEvent event) {
+        if (!(event.getEntity() instanceof Arrow)) return;
+
+        Arrow arrow = (Arrow) event.getEntity();
+
+        // Check if this is a taser arrow
+        if (!arrow.hasMetadata("taser_arrow")) return;
+
+        // Get the caster
+        String casterUUID = arrow.getMetadata("taser_caster").get(0).asString();
+        Player caster = Bukkit.getPlayer(java.util.UUID.fromString(casterUUID));
+
+        if (caster == null) {
+            arrow.remove();
+            return;
+        }
+
+        // Check if we hit a player
+        if (event.getHitEntity() instanceof Player) {
+            Player target = (Player) event.getHitEntity();
+
+            if (target.equals(caster)) {
+                arrow.remove();
+                return; // Don't tase yourself
+            }
+
+            // Get taser settings
+            int stunDuration = arrow.getMetadata("stun_duration").get(0).asInt();
+            double maxRange = arrow.getMetadata("taser_range").get(0).asDouble();
+
+            // Check range
+            double distance = caster.getLocation().distance(target.getLocation());
+            if (distance > maxRange) {
+                caster.sendMessage(ChatColor.RED + "Target is too far away!");
+                arrow.remove();
+                return;
+            }
+
+            // Apply stun effect (slowness + mining fatigue + jump boost negative)
+            target.addPotionEffect(new org.bukkit.potion.PotionEffect(
+                    PotionEffectType.SLOW, stunDuration, 255));
+            target.addPotionEffect(new org.bukkit.potion.PotionEffect(
+                    org.bukkit.potion.PotionEffectType.SLOW_DIGGING, stunDuration, 255));
+            target.addPotionEffect(new org.bukkit.potion.PotionEffect(
+                    org.bukkit.potion.PotionEffectType.JUMP, stunDuration, -10));
+
+            // Freeze them in place
+            Location freezeLocation = target.getLocation();
+
+            // Create a task to keep them frozen
+            int taskId = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+                if (target.isOnline() && target.hasPotionEffect(PotionEffectType.SLOW)) {
+                    // Teleport them back to freeze location if they move too far
+                    if (target.getLocation().distance(freezeLocation) > 0.5) {
+                        target.teleport(freezeLocation);
+                    }
+
+                    // Electric effect while stunned
+                    target.getWorld().spawnParticle(Particle.ELECTRIC_SPARK,
+                            target.getLocation().add(0, 1, 0), 5, 0.3, 0.5, 0.3, 0.1);
+                }
+            }, 0L, 2L).getTaskId();
+
+            // Cancel the freeze task when stun ends
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                Bukkit.getScheduler().cancelTask(taskId);
+            }, stunDuration + 5);
+
+            // Effects
+            target.playSound(target.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1.0f, 2.0f);
+            caster.playSound(caster.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 0.5f, 2.0f);
+
+            // Visual effects
+            Location targetLoc = target.getLocation().add(0, 1, 0);
+            targetLoc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, targetLoc, 25, 0.5, 1, 0.5, 0.2);
+            targetLoc.getWorld().spawnParticle(Particle.CRIT, targetLoc, 10, 0.3, 0.5, 0.3, 0.1);
+
+            // Messages
+            caster.sendMessage(ChatColor.YELLOW + "You tased " + target.getName() + "!");
+            target.sendMessage(ChatColor.RED + "You've been tased by " + caster.getName() + "! You're stunned!");
+        }
+
+        // Remove the arrow
+        arrow.remove();
+    }
+
+
 
     private void handleSwapBallHit(ProjectileHitEvent event) {
         if (event.getHitEntity() instanceof Player && event.getEntity().getShooter() instanceof Player) {

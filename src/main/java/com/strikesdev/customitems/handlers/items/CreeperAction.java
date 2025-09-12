@@ -30,6 +30,7 @@ public class CreeperAction implements ItemAction {
 
         // Spawn creeper
         Creeper creeper = (Creeper) spawnLoc.getWorld().spawnEntity(spawnLoc, EntityType.CREEPER);
+        creeper.setPowered(true);
         creeper.setMetadata("custom_creeper", new FixedMetadataValue(plugin, true));
         creeper.setMetadata("owner", new FixedMetadataValue(plugin, player.getUniqueId()));
         creeper.setMaxFuseTicks(Integer.MAX_VALUE); // Prevent normal explosion

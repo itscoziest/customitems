@@ -18,9 +18,7 @@ public class CooldownManager {
     }
 
     public void setCooldown(Player player, String itemId, int seconds) {
-        if (player.hasPermission("customitems.bypass.cooldown")) {
-            return;
-        }
+
 
         UUID playerId = player.getUniqueId();
         cooldowns.computeIfAbsent(playerId, k -> new ConcurrentHashMap<>())
@@ -28,9 +26,7 @@ public class CooldownManager {
     }
 
     public boolean hasCooldown(Player player, String itemId) {
-        if (player.hasPermission("customitems.bypass.cooldown")) {
-            return false;
-        }
+
 
         UUID playerId = player.getUniqueId();
         Map<String, Long> playerCooldowns = cooldowns.get(playerId);
@@ -53,9 +49,7 @@ public class CooldownManager {
     }
 
     public long getRemainingCooldown(Player player, String itemId) {
-        if (player.hasPermission("customitems.bypass.cooldown")) {
-            return 0;
-        }
+
 
         UUID playerId = player.getUniqueId();
         Map<String, Long> playerCooldowns = cooldowns.get(playerId);

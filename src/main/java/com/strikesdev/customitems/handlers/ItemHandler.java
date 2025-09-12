@@ -26,6 +26,7 @@ public class ItemHandler {
         itemActions.put("force_field", new ForceFieldAction(plugin));
         itemActions.put("exploding_snowman", new ExplodingSnowmanAction(plugin));
         itemActions.put("speed_berries", new SpeedBerriesAction(plugin));
+        itemActions.put("strength_cookie", new StrengthCookieAction(plugin)); // NEW: Strength Cookie
         itemActions.put("illusion", new IllusionAction(plugin));
         itemActions.put("golem_fists", new GolemFistsAction(plugin));
         itemActions.put("snap_ring", new SnapRingAction(plugin));
@@ -43,6 +44,15 @@ public class ItemHandler {
         itemActions.put("homing_dart", new HomingDartAction(plugin));
         itemActions.put("beekeeper", new BeekeeperAction(plugin));
         itemActions.put("smoke_bomb", new SmokeBombAction(plugin));
+        itemActions.put("haste_potion", new HastePotionAction(plugin));
+        itemActions.put("explosive_crossbow", new ExplosiveCrossbowAction(plugin));
+        itemActions.put("lightning_wand", new LightningWandAction(plugin));
+        itemActions.put("sonic_boom", new SonicBoomAction(plugin));
+        itemActions.put("dragon_breath", new DragonBreathAction(plugin));
+        itemActions.put("dog_army", new DogArmyAction(plugin));
+        itemActions.put("lasso", new LassoAction(plugin));
+        itemActions.put("taser", new TaserAction(plugin));
+        itemActions.put("grave_digger", new GraveDiggerAction(plugin));
     }
 
     public boolean handleItemUse(Player player, CustomItem item, PlayerInteractEvent event) {

@@ -77,6 +77,29 @@ items:
       type: "speed_berries"
       consume: true
 
+  # 🍪 Strength Cookie
+  strength_cookie:
+    name: "&6&lStrength Cookie"
+    material: COOKIE
+    lore:
+      - "&7A delicious cookie that makes"
+      - "&7you incredibly strong!"
+      - "&6Strength III &7for &e8 seconds"
+    duration: 8
+    cooldown: 30
+    combat-cap: 32
+    permission: "customitems.use.strength_cookie"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    effects:
+      strength:
+        amplifier: 2
+        duration: 8
+    custom-data:
+      type: "strength_cookie"
+      consume: true
+
   # 🌀 Illusion
   illusion:
     name: "&5&lIllusion"
@@ -406,3 +429,195 @@ items:
     custom-data:
       type: "smoke_bomb"
       consume: true
+
+  # 🍯 Haste Potion
+  haste_potion:
+    name: "&e&lHaste Potion"
+    material: HONEY_BOTTLE
+    lore:
+      - "&7Sweet honey that speeds up"
+      - "&7your mining and digging!"
+      - "&eHaste II &7for &e8 seconds"
+    duration: 8
+    cooldown: 8
+    combat-cap: 64
+    permission: "customitems.use.haste_potion"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    effects:
+      haste:
+        amplifier: 1
+        duration: 8
+    custom-data:
+      type: "haste_potion"
+      consume: true
+
+  # 💥 Explosive Crossbow
+  explosive_crossbow:
+    name: "&c&lExplosive Crossbow"
+    material: CROSSBOW
+    lore:
+      - "&7A crossbow that shoots explosive"
+      - "&7arrows that detonate on impact!"
+      - "&cExplosion Power: &e2.0"
+    damage: 2.0
+    cooldown: 0
+    combat-cap: 0
+    permission: "customitems.use.explosive_crossbow"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "explosive_crossbow"
+      consume: false
+      explosion-power: 2.0
+
+  # ⚡ Lightning Wand
+  lightning_wand:
+    name: "&e&lLightning Wand"
+    material: END_ROD
+    lore:
+      - "&7Channel the power of thunder!"
+      - "&7Strike lightning where you look"
+      - "&eDamage: &c8.0 &7+ Lightning damage"
+    damage: 8.0
+    cooldown: 20
+    combat-cap: 32
+    permission: "customitems.use.lightning_wand"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "lightning_wand"
+      consume: false
+      lightning-damage: 8.0
+
+  # 🔊 Sonic Boom
+  sonic_boom:
+    name: "&9&lSonic Boom"
+    material: ECHO_SHARD
+    lore:
+      - "&7Harness the power of the deep dark!"
+      - "&7Unleash a devastating sonic attack"
+      - "&9Damage: &c10.0 &7| &9Range: &e30 blocks"
+    damage: 10.0
+    cooldown: 20
+    combat-cap: 16
+    permission: "customitems.use.sonic_boom"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "sonic_boom"
+      consume: true
+      sonic-damage: 10.0
+      sonic-range: 30.0
+
+  # 🐉 Dragon Breath
+  dragon_breath:
+    name: "&5&lDragon Breath"
+    material: POPPED_CHORUS_FRUIT
+    lore:
+      - "&7Harness the power of the Ender Dragon!"
+      - "&7Launch a fireball that creates lingering"
+      - "&7dragon breath on impact"
+      - "&5Damage: &c3.0 &7| &5Duration: &e5 seconds"
+    damage: 3.0
+    cooldown: 20
+    combat-cap: 32
+    permission: "customitems.use.dragon_breath"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "dragon_breath"
+      consume: true
+      breath-damage: 3.0
+      breath-duration: 100
+
+  # 🐕 Dog Army
+  dog_army:
+    name: "&6&lDog Army"
+    material: BONE
+    lore:
+      - "&7Summon loyal dogs to fight by your side!"
+      - "&7They will protect you and attack your enemies"
+      - "&6Dogs: &e2 &7| &6Duration: &e15 seconds"
+    cooldown: 45
+    combat-cap: 8
+    permission: "customitems.use.dog_army"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "dog_army"
+      consume: true
+      dog-count: 2
+      dog-health: 20
+      dog-duration: 300
+
+  # 🪢 Lasso
+  lasso:
+    name: "&e&lLasso"
+    material: LEAD
+    lore:
+      - "&7Rope in your enemies!"
+      - "&7Shoot to pull players closer"
+      - "&ePull Strength: &c1.5 &7| &eRange: &c30 blocks"
+      - "&7Stronger pull for longer distances"
+    cooldown: 8
+    combat-cap: 16
+    permission: "customitems.use.lasso"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "lasso"
+      consume: true
+      pull-strength: 1.5
+      max-range: 30.0
+      distance-based-pull: true
+
+  # ⚡ Taser
+  taser:
+    name: "&e&lTaser"
+    material: BLAZE_ROD
+    lore:
+      - "&7Stun your enemies with electricity!"
+      - "&7Freezes the target in place"
+      - "&eStun Duration: &c3 seconds"
+      - "&eRange: &c25 blocks"
+    cooldown: 15
+    combat-cap: 8
+    permission: "customitems.use.taser"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "taser"
+      consume: true
+      stun-duration: 60
+      taser-range: 25.0
+
+  # ⚰️ Grave Digger
+  grave_digger:
+    name: "&8&lGrave Digger"
+    material: IRON_PICKAXE
+    lore:
+      - "&7Summon a spectral digger that"
+      - "&7carves through blocks in its path"
+      - "&8Duration: &75 seconds &8| &8Area: &73x3x3"
+      - "&cCannot break bedrock or protected areas"
+    cooldown: 30
+    combat-cap: 4
+    permission: "customitems.use.grave_digger"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "grave_digger"
+      consume: true
+      digger-duration: 100
+      digger-speed: 1.0
+      drop-items: false
