@@ -25,18 +25,21 @@ public class SwapBallAction implements ItemAction {
         EnderPearl pearl = player.launchProjectile(EnderPearl.class);
         pearl.setMetadata("custom_item", new FixedMetadataValue(plugin, "swap_ball"));
         pearl.setMetadata("no_teleport", new FixedMetadataValue(plugin, true));
-        pearl.setMetadata("item_slot", new FixedMetadataValue(plugin, event.getHand().toString()));
-        pearl.setMetadata("original_item", new FixedMetadataValue(plugin, event.getItem().clone()));
+        // Add a reference to the player who threw it
+        pearl.setMetadata("caster_uuid", new FixedMetadataValue(plugin, player.getUniqueId().toString()));
 
-        // DON'T consume item yet - only consume on successful hit
 
         // Sound effect
         player.playSound(player.getLocation(), Sound.ENTITY_ENDER_PEARL_THROW, 1.0f, 1.2f);
 
-        return true; // Don't call consumeItem here
+        // *** THIS IS THE ONLY CHANGE: Consume the item on throw, as you wanted ***
+        consumeItem(player, event);
+
+        return true;
     }
 
     private void consumeItem(Player player, PlayerInteractEvent event) {
+        if (event.getItem() == null) return;
         if (event.getItem().getAmount() > 1) {
             event.getItem().setAmount(event.getItem().getAmount() - 1);
         } else {

@@ -2,16 +2,12 @@ package com.strikesdev.customitems.handlers.items;
 
 import com.strikesdev.customitems.CustomItems;
 import com.strikesdev.customitems.models.CustomItem;
-import org.bukkit.*;
-import org.bukkit.entity.AreaEffectCloud;
-import org.bukkit.entity.DragonFireball;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Snowball;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.util.Vector;
 
 public class DragonBreathAction implements ItemAction {
     private final CustomItems plugin;
@@ -26,30 +22,18 @@ public class DragonBreathAction implements ItemAction {
             return false;
         }
 
-        // Get damage and duration from config
-        double damage = item.getCustomDataDouble("breath-damage", 3.0);
-        int duration = item.getCustomDataInt("breath-duration", 100); // In ticks (5 seconds default)
+        double configDamage = 3.0;
+        int configDuration = 100; // 5 seconds
 
-        // Create dragon fireball
-        DragonFireball fireball = player.launchProjectile(DragonFireball.class);
+        Snowball dragonProjectile = player.launchProjectile(Snowball.class);
+        dragonProjectile.setVelocity(player.getLocation().getDirection().multiply(2.0));
 
-        // Set velocity for better control
-        Vector direction = player.getLocation().getDirection();
-        fireball.setVelocity(direction.multiply(2.0));
+        dragonProjectile.setMetadata("dragon_breath_projectile", new FixedMetadataValue(plugin, true));
+        dragonProjectile.setMetadata("caster_name", new FixedMetadataValue(plugin, player.getName()));
+        dragonProjectile.setMetadata("config_damage", new FixedMetadataValue(plugin, configDamage));
+        dragonProjectile.setMetadata("config_duration", new FixedMetadataValue(plugin, configDuration));
 
-        // Store custom data on the fireball for when it explodes
-        fireball.setMetadata("custom_dragon_breath", new FixedMetadataValue(plugin, true));
-        fireball.setMetadata("breath_damage", new FixedMetadataValue(plugin, damage));
-        fireball.setMetadata("breath_duration", new FixedMetadataValue(plugin, duration));
-        fireball.setMetadata("breath_caster", new FixedMetadataValue(plugin, player.getUniqueId().toString()));
-
-        // Play dragon breath sound
-        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_SHOOT, 1.0f, 1.0f);
-
-        // Visual effect at launch
-        Location launchLoc = player.getEyeLocation();
-        launchLoc.getWorld().spawnParticle(Particle.DRAGON_BREATH, launchLoc, 20, 0.3, 0.3, 0.3, 0.1);
-
+        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_SHOOT, 1.5f, 0.8f);
 
         if (event.getItem() != null) {
             if (event.getItem().getAmount() > 1) {

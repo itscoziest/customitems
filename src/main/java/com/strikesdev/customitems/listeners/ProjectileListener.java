@@ -4,6 +4,7 @@ import com.strikesdev.customitems.CustomItems;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.Sound;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -21,189 +22,164 @@ import org.bukkit.metadata.FixedMetadataValue;
 import com.strikesdev.customitems.models.CustomItem;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Fireball;
-import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.event.entity.EntitySpawnEvent;
+import java.util.HashSet;
+import java.util.Set;
+import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionType;
+import java.util.UUID;
 
-
-// Projectile Listener for custom projectiles
 public class ProjectileListener implements Listener {
     private final CustomItems plugin;
+    private final Set<Location> dragonBreathImpacts = new HashSet<>();
 
     public ProjectileListener(CustomItems plugin) {
         this.plugin = plugin;
     }
 
+
+
+    private void onDragonBreathImpact(ProjectileHitEvent event) {
+        if (!(event.getEntity() instanceof Snowball)) return;
+
+        Snowball projectile = (Snowball) event.getEntity();
+        if (!projectile.hasMetadata("dragon_breath_projectile")) return;
+
+        projectile.remove();
+
+        String casterName = projectile.getMetadata("caster_name").get(0).asString();
+        Player caster = plugin.getServer().getPlayer(casterName);
+        if (caster == null || !caster.isOnline()) return;
+
+        double damagePerTick = projectile.getMetadata("config_damage").get(0).asDouble();
+        int totalDurationTicks = projectile.getMetadata("config_duration").get(0).asInt();
+
+        Location breathCenter = projectile.getLocation();
+        double effectRadius = 4.0;
+
+        breathCenter.getWorld().playSound(breathCenter, Sound.ENTITY_ENDER_DRAGON_HURT, 2.0f, 0.5f);
+        breathCenter.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, breathCenter, 3, 1, 1, 1, 0);
+
+        new BukkitRunnable() {
+            private int currentTick = 0;
+
+            @Override
+            public void run() {
+                if (currentTick >= totalDurationTicks) {
+                    breathCenter.getWorld().spawnParticle(Particle.DRAGON_BREATH, breathCenter, 150, effectRadius, 1, effectRadius, 0.3);
+                    breathCenter.getWorld().playSound(breathCenter, Sound.BLOCK_FIRE_EXTINGUISH, 1.0f, 0.5f);
+                    this.cancel();
+                    return;
+                }
+
+                breathCenter.getWorld().spawnParticle(Particle.DRAGON_BREATH, breathCenter, 50, effectRadius * 0.8, 0.8, effectRadius * 0.8, 0.1);
+
+                if (currentTick % 20 == 0) {
+                    for (Entity nearbyEntity : breathCenter.getWorld().getNearbyEntities(breathCenter, effectRadius, effectRadius, effectRadius)) {
+                        if (nearbyEntity instanceof Player && !nearbyEntity.equals(caster)) {
+                            Player victim = (Player) nearbyEntity;
+
+                            double currentHealth = victim.getHealth();
+                            double newHealth = Math.max(0, currentHealth - damagePerTick);
+                            victim.setHealth(newHealth);
+
+                            victim.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR,
+                                    victim.getLocation().add(0, 1.5, 0), 8, 0.4, 0.4, 0.4, 0.2);
+                            victim.playSound(victim.getLocation(), Sound.ENTITY_PLAYER_HURT_ON_FIRE, 0.8f, 1.5f);
+
+                            if (newHealth <= 0) {
+                                victim.setLastDamageCause(new org.bukkit.event.entity.EntityDamageByEntityEvent(caster, victim, org.bukkit.event.entity.EntityDamageEvent.DamageCause.MAGIC, damagePerTick));
+                                victim.damage(0.1, caster);
+                            }
+                        }
+                    }
+                }
+
+                currentTick++;
+            }
+        }.runTaskTimer(plugin, 0L, 1L);
+    }
+
     @EventHandler
     public void onProjectileHit(ProjectileHitEvent event) {
-        if (!(event.getEntity() instanceof Arrow)) return;
+        Projectile projectile = event.getEntity();
 
-        Arrow arrow = (Arrow) event.getEntity();
-
-        // Check if this is an explosive arrow
-        if (arrow.hasMetadata("explosive_arrow")) {
-            // Get explosion power
-            double explosionPower = arrow.getMetadata("explosion_power").get(0).asDouble();
-
-            // Create explosion at arrow location
-            Location loc = arrow.getLocation();
-            loc.getWorld().createExplosion(loc, (float) explosionPower, false, false);
-
-            // Add visual effects
-            loc.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, loc, 1);
-            loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
-
-            // Remove the arrow
-            arrow.remove();
+        // Dragon breath
+        if (projectile instanceof Snowball && projectile.hasMetadata("dragon_breath_projectile")) {
+            onDragonBreathImpact(event);
+            return;
         }
-    }
 
+        // Arrows
+        if (projectile instanceof Arrow) {
+            Arrow arrow = (Arrow) projectile;
 
-    @EventHandler
-    public void onCrossbowShoot(EntityShootBowEvent event) {
-        if (!(event.getEntity() instanceof Player)) return;
-        if (event.getBow() == null) return;
-
-        Player player = (Player) event.getEntity();
-
-        // Check if they're using an explosive crossbow
-        if (plugin.getItemManager().isCustomItem(event.getBow())) {
-            CustomItem item = plugin.getItemManager().getCustomItem(event.getBow());
-            if (item != null && "explosive_crossbow".equals(item.getCustomDataString("type", ""))) {
-                // Mark the projectile as explosive
-                if (event.getProjectile() instanceof Arrow) {
-                    Arrow arrow = (Arrow) event.getProjectile();
-                    double explosionPower = item.getCustomDataDouble("explosion-power", 2.0);
-
-                    arrow.setMetadata("explosive_arrow", new FixedMetadataValue(plugin, true));
-                    arrow.setMetadata("explosion_power", new FixedMetadataValue(plugin, explosionPower));
-
-                    // Visual trail
-                    createExplosiveTrail(arrow);
-
-                }
-            }
-        }
-    }
-
-    @EventHandler
-    public void onFireballHit(ProjectileHitEvent event) {
-        if (!(event.getEntity() instanceof Fireball)) return;
-
-        Fireball fireball = (Fireball) event.getEntity();
-
-        // Check if this is a grave digger fireball
-        if (fireball.hasMetadata("grave_digger")) {
-            // Cancel the hit event to prevent normal fireball explosion/despawn
-            event.setCancelled(true);
-
-            // Don't remove the fireball - let it continue through blocks
-            // The timer in GraveDiggerAction will handle removal
-        }
-    }
-
-    private void createExplosiveTrail(Arrow arrow) {
-        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            if (!arrow.isValid() || arrow.isDead()) {
+            if (arrow.hasMetadata("explosive_arrow")) {
+                double explosionPower = arrow.getMetadata("explosion_power").get(0).asDouble();
+                Location loc = arrow.getLocation();
+                loc.getWorld().createExplosion(loc, (float) explosionPower, false, false);
+                loc.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, loc, 1);
+                loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
+                arrow.remove();
                 return;
             }
-            arrow.getWorld().spawnParticle(Particle.FLAME, arrow.getLocation(), 2, 0.1, 0.1, 0.1, 0);
-        }, 0L, 2L);
+        }
+
+        // Ender pearls
+        if (projectile instanceof EnderPearl) {
+            EnderPearl pearl = (EnderPearl) projectile;
+
+            if (pearl.hasMetadata("custom_item") && "swap_ball".equals(pearl.getMetadata("custom_item").get(0).asString())) {
+                event.setCancelled(true);
+                pearl.remove();
+
+                if (event.getHitEntity() instanceof Player) {
+                    Player target = (Player) event.getHitEntity();
+                    if (!pearl.hasMetadata("caster_uuid")) return;
+                    String casterUUID = pearl.getMetadata("caster_uuid").get(0).asString();
+                    Player caster = Bukkit.getPlayer(UUID.fromString(casterUUID));
+
+                    if (caster == null || !caster.isOnline() || caster.equals(target)) {
+                        return;
+                    }
+
+                    Location casterLoc = caster.getLocation().clone();
+                    Location targetLoc = target.getLocation().clone();
+                    caster.teleport(targetLoc);
+                    target.teleport(casterLoc);
+
+                    caster.playSound(caster.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                    target.playSound(target.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                }
+                return;
+            }
+        }
     }
 
-    private void handleFireballHit(ProjectileHitEvent event) {
-        // Create explosion without fire
-        double damage = 5.0;
-        if (event.getEntity().hasMetadata("damage")) {
-            damage = event.getEntity().getMetadata("damage").get(0).asDouble();
-        }
-
-        Player owner = null;
-        if (event.getEntity().getShooter() instanceof Player) {
-            owner = (Player) event.getEntity().getShooter();
-        }
-
-        // Create explosion that doesn't damage the owner
-        Location loc = event.getEntity().getLocation();
-        loc.getWorld().createExplosion(loc.getX(), loc.getY(), loc.getZ(),
-                (float) damage, false, false, owner);
-    }
-
-    private void handleDynamiteHit(ProjectileHitEvent event) {
-        // Create explosion with block damage
-        double damage = 4.0;
-        if (event.getEntity().hasMetadata("damage")) {
-            damage = event.getEntity().getMetadata("damage").get(0).asDouble();
-        }
-
-        Player owner = null;
-        if (event.getEntity().getShooter() instanceof Player) {
-            owner = (Player) event.getEntity().getShooter();
-        }
-
-        // Create explosion that doesn't damage the owner
-        Location loc = event.getEntity().getLocation();
-        loc.getWorld().createExplosion(loc.getX(), loc.getY(), loc.getZ(),
-                (float) damage, false, true, owner);
-    }
-
-
-    @EventHandler
-    public void onDragonFireballHit(ProjectileHitEvent event) {
-        if (!(event.getEntity() instanceof DragonFireball)) return;
-
-        DragonFireball fireball = (DragonFireball) event.getEntity();
-
-        // Check if this is our custom dragon breath
-        if (!fireball.hasMetadata("custom_dragon_breath")) return;
-
-        Location hitLocation = fireball.getLocation();
-
-        // Get stored metadata
-        double damage = fireball.getMetadata("breath_damage").get(0).asDouble();
-        int duration = fireball.getMetadata("breath_duration").get(0).asInt();
-        String casterUUID = fireball.getMetadata("breath_caster").get(0).asString();
-
-        Player caster = Bukkit.getPlayer(java.util.UUID.fromString(casterUUID));
-
-        // Create area effect cloud (lingering dragon breath)
-        AreaEffectCloud cloud = hitLocation.getWorld().spawn(hitLocation, AreaEffectCloud.class);
-
-        // Configure the cloud like dragon breath
-        cloud.setRadius(3.0f);
-        cloud.setDuration(duration);
-        cloud.setRadiusOnUse(0f);
-        cloud.setRadiusPerTick(0.02f);
-        cloud.setParticle(Particle.DRAGON_BREATH);
-        cloud.setColor(Color.PURPLE);
-
-        if (caster != null) {
-            cloud.setSource(caster);
-        }
-
-        // Add harmful effect (instant damage every tick)
-        cloud.addCustomEffect(new PotionEffect(PotionEffectType.HARM, 1, 0), true);
-
-        // Play explosion sound and effects
-        hitLocation.getWorld().playSound(hitLocation, Sound.ENTITY_ENDER_DRAGON_HURT, 1.0f, 0.8f);
-        hitLocation.getWorld().spawnParticle(Particle.DRAGON_BREATH, hitLocation, 50, 2, 1, 2, 0.1);
-
-        // Remove the fireball
-        fireball.remove();
-    }
-
-
-
-    @EventHandler
-    public void onLassoHit(ProjectileHitEvent event) {
-        if (!(event.getEntity() instanceof Arrow)) return;
-
+    private void handleExplosiveArrowHit(ProjectileHitEvent event) {
         Arrow arrow = (Arrow) event.getEntity();
 
-        // Check if this is a lasso arrow
-        if (!arrow.hasMetadata("lasso_arrow")) return;
+        // Get explosion power
+        double explosionPower = arrow.getMetadata("explosion_power").get(0).asDouble();
+
+        // Create explosion at arrow location
+        Location loc = arrow.getLocation();
+        loc.getWorld().createExplosion(loc, (float) explosionPower, false, false);
+
+        // Add visual effects
+        loc.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, loc, 1);
+        loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
+
+        // Remove the arrow
+        arrow.remove();
+    }
+
+    private void handleLassoHit(ProjectileHitEvent event) {
+        Arrow arrow = (Arrow) event.getEntity();
 
         // Get the caster
         String casterUUID = arrow.getMetadata("lasso_caster").get(0).asString();
-        Player caster = Bukkit.getPlayer(java.util.UUID.fromString(casterUUID));
+        Player caster = Bukkit.getPlayer(UUID.fromString(casterUUID));
 
         if (caster == null) {
             arrow.remove();
@@ -236,7 +212,6 @@ public class ProjectileListener implements Listener {
             // Calculate pull strength based on distance if enabled
             double pullStrength = basePullStrength;
             if (distanceBased) {
-                // Stronger pull for longer distances (up to 2x strength)
                 pullStrength = basePullStrength * (1.0 + (distance / maxRange));
             }
 
@@ -272,47 +247,12 @@ public class ProjectileListener implements Listener {
         arrow.remove();
     }
 
-    private void createLassoLineEffect(Location from, Location to) {
-        Vector direction = to.toVector().subtract(from.toVector());
-        double distance = direction.length();
-        direction.normalize();
-
-        for (double i = 0; i < distance; i += 0.5) {
-            Location particleLoc = from.clone().add(direction.clone().multiply(i));
-            particleLoc.getWorld().spawnParticle(Particle.CRIT, particleLoc, 1, 0, 0, 0, 0);
-        }
-    }
-
-
-
-    private void handleSlownessSnowballHit(ProjectileHitEvent event) {
-        if (event.getHitEntity() instanceof Player) {
-            Player hitPlayer = (Player) event.getHitEntity();
-            hitPlayer.addPotionEffect(new PotionEffect(
-                    PotionEffectType.SLOW,
-                    60, // 3 seconds
-                    1   // Slowness II
-            ));
-
-            // Visual feedback
-            hitPlayer.spawnParticle(Particle.SNOWFLAKE, hitPlayer.getLocation().add(0, 1, 0), 15, 0.5, 1, 0.5, 0.1);
-            hitPlayer.playSound(hitPlayer.getLocation(), Sound.ENTITY_PLAYER_HURT_FREEZE, 1.0f, 1.2f);
-        }
-    }
-
-
-    @EventHandler
-    public void onTaserHit(ProjectileHitEvent event) {
-        if (!(event.getEntity() instanceof Arrow)) return;
-
+    private void handleTaserHit(ProjectileHitEvent event) {
         Arrow arrow = (Arrow) event.getEntity();
-
-        // Check if this is a taser arrow
-        if (!arrow.hasMetadata("taser_arrow")) return;
 
         // Get the caster
         String casterUUID = arrow.getMetadata("taser_caster").get(0).asString();
-        Player caster = Bukkit.getPlayer(java.util.UUID.fromString(casterUUID));
+        Player caster = Bukkit.getPlayer(UUID.fromString(casterUUID));
 
         if (caster == null) {
             arrow.remove();
@@ -340,13 +280,10 @@ public class ProjectileListener implements Listener {
                 return;
             }
 
-            // Apply stun effect (slowness + mining fatigue + jump boost negative)
-            target.addPotionEffect(new org.bukkit.potion.PotionEffect(
-                    PotionEffectType.SLOW, stunDuration, 255));
-            target.addPotionEffect(new org.bukkit.potion.PotionEffect(
-                    org.bukkit.potion.PotionEffectType.SLOW_DIGGING, stunDuration, 255));
-            target.addPotionEffect(new org.bukkit.potion.PotionEffect(
-                    org.bukkit.potion.PotionEffectType.JUMP, stunDuration, -10));
+            // Apply stun effect
+            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, stunDuration, 255));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, stunDuration, 255));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, stunDuration, -10));
 
             // Freeze them in place
             Location freezeLocation = target.getLocation();
@@ -388,51 +325,140 @@ public class ProjectileListener implements Listener {
         arrow.remove();
     }
 
-
-
     private void handleSwapBallHit(ProjectileHitEvent event) {
-        if (event.getHitEntity() instanceof Player && event.getEntity().getShooter() instanceof Player) {
-            Player shooter = (Player) event.getEntity().getShooter();
-            Player target = (Player) event.getHitEntity();
+        EnderPearl pearl = (EnderPearl) event.getEntity();
 
-            // Successful hit - consume the item now
-            if (event.getEntity().hasMetadata("item_slot") && event.getEntity().hasMetadata("original_item")) {
-                String slotName = event.getEntity().getMetadata("item_slot").get(0).asString();
-                org.bukkit.inventory.EquipmentSlot slot = org.bukkit.inventory.EquipmentSlot.valueOf(slotName);
+        // This is the key part: it stops the default ender pearl teleport
+        event.setCancelled(true);
+        pearl.remove();
 
-                ItemStack originalItem = (ItemStack) event.getEntity().getMetadata("original_item").get(0).value();
-                ItemStack currentItem = (slot == org.bukkit.inventory.EquipmentSlot.HAND) ?
-                        shooter.getInventory().getItemInMainHand() : shooter.getInventory().getItemInOffHand();
-
-                // Consume the item
-                if (currentItem.isSimilar(originalItem)) {
-                    if (currentItem.getAmount() > 1) {
-                        currentItem.setAmount(currentItem.getAmount() - 1);
-                    } else {
-                        if (slot == org.bukkit.inventory.EquipmentSlot.HAND) {
-                            shooter.getInventory().setItemInMainHand(null);
-                        } else {
-                            shooter.getInventory().setItemInOffHand(null);
-                        }
-                    }
-                }
-            }
-
-            // Swap positions
-            Location shooterLoc = shooter.getLocation().clone();
-            Location targetLoc = target.getLocation().clone();
-
-            shooter.teleport(targetLoc);
-            target.teleport(shooterLoc);
-
-            // Effects
-            shooter.playSound(shooter.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
-            target.playSound(target.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+        // We only care if it hits a player
+        if (!(event.getHitEntity() instanceof Player)) {
+            return;
         }
-        // If no player hit, item is not consumed (stays in inventory)
+
+        Player target = (Player) event.getHitEntity();
+
+        // Get the player who threw the ball
+        if (!pearl.hasMetadata("caster_uuid")) return;
+        String casterUUID = pearl.getMetadata("caster_uuid").get(0).asString();
+        Player caster = Bukkit.getPlayer(UUID.fromString(casterUUID));
+
+        // Make sure the caster is valid and not hitting themselves
+        if (caster == null || !caster.isOnline() || caster.equals(target)) {
+            return;
+        }
+
+        // --- SWAP LOGIC ---
+        Location casterLoc = caster.getLocation().clone();
+        Location targetLoc = target.getLocation().clone();
+
+        caster.teleport(targetLoc);
+        target.teleport(casterLoc);
+
+        // Sound effects
+        caster.playSound(caster.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+        target.playSound(target.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
     }
 
+    @EventHandler
+    public void onCrossbowShoot(EntityShootBowEvent event) {
+        if (!(event.getEntity() instanceof Player)) return;
+        if (event.getBow() == null) return;
 
+        Player player = (Player) event.getEntity();
+
+        // Check if they're using an explosive crossbow
+        if (plugin.getItemManager().isCustomItem(event.getBow())) {
+            CustomItem item = plugin.getItemManager().getCustomItem(event.getBow());
+            if (item != null && "explosive_crossbow".equals(item.getCustomDataString("type", ""))) {
+                // Mark the projectile as explosive
+                if (event.getProjectile() instanceof Arrow) {
+                    Arrow arrow = (Arrow) event.getProjectile();
+                    double explosionPower = item.getCustomDataDouble("explosion-power", 2.0);
+
+                    arrow.setMetadata("explosive_arrow", new FixedMetadataValue(plugin, true));
+                    arrow.setMetadata("explosion_power", new FixedMetadataValue(plugin, explosionPower));
+
+                    // Visual trail
+                    createExplosiveTrail(arrow);
+                }
+            }
+        }
+    }
+
+    private void createExplosiveTrail(Arrow arrow) {
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (!arrow.isValid() || arrow.isDead()) {
+                return;
+            }
+            arrow.getWorld().spawnParticle(Particle.FLAME, arrow.getLocation(), 2, 0.1, 0.1, 0.1, 0);
+        }, 0L, 2L);
+    }
+
+    private void createLassoLineEffect(Location from, Location to) {
+        Vector direction = to.toVector().subtract(from.toVector());
+        double distance = direction.length();
+        direction.normalize();
+
+        for (double i = 0; i < distance; i += 0.5) {
+            Location particleLoc = from.clone().add(direction.clone().multiply(i));
+            particleLoc.getWorld().spawnParticle(Particle.CRIT, particleLoc, 1, 0, 0, 0, 0);
+        }
+    }
+
+    // ===== UNUSED HELPER METHODS (KEEP FOR COMPATIBILITY) =====
+
+    private void handleFireballHit(ProjectileHitEvent event) {
+        // Create explosion without fire
+        double damage = 5.0;
+        if (event.getEntity().hasMetadata("damage")) {
+            damage = event.getEntity().getMetadata("damage").get(0).asDouble();
+        }
+
+        Player owner = null;
+        if (event.getEntity().getShooter() instanceof Player) {
+            owner = (Player) event.getEntity().getShooter();
+        }
+
+        // Create explosion that doesn't damage the owner
+        Location loc = event.getEntity().getLocation();
+        loc.getWorld().createExplosion(loc.getX(), loc.getY(), loc.getZ(),
+                (float) damage, false, false, owner);
+    }
+
+    private void handleDynamiteHit(ProjectileHitEvent event) {
+        // Create explosion with block damage
+        double damage = 4.0;
+        if (event.getEntity().hasMetadata("damage")) {
+            damage = event.getEntity().getMetadata("damage").get(0).asDouble();
+        }
+
+        Player owner = null;
+        if (event.getEntity().getShooter() instanceof Player) {
+            owner = (Player) event.getEntity().getShooter();
+        }
+
+        // Create explosion that doesn't damage the owner
+        Location loc = event.getEntity().getLocation();
+        loc.getWorld().createExplosion(loc.getX(), loc.getY(), loc.getZ(),
+                (float) damage, false, true, owner);
+    }
+
+    private void handleSlownessSnowballHit(ProjectileHitEvent event) {
+        if (event.getHitEntity() instanceof Player) {
+            Player hitPlayer = (Player) event.getHitEntity();
+            hitPlayer.addPotionEffect(new PotionEffect(
+                    PotionEffectType.SLOW,
+                    60, // 3 seconds
+                    1   // Slowness II
+            ));
+
+            // Visual feedback
+            hitPlayer.spawnParticle(Particle.SNOWFLAKE, hitPlayer.getLocation().add(0, 1, 0), 15, 0.5, 1, 0.5, 0.1);
+            hitPlayer.playSound(hitPlayer.getLocation(), Sound.ENTITY_PLAYER_HURT_FREEZE, 1.0f, 1.2f);
+        }
+    }
 
     private void handleHomingDartHit(ProjectileHitEvent event) {
         if (event.getHitEntity() instanceof Player) {
@@ -455,7 +481,6 @@ public class ProjectileListener implements Listener {
             event.getEntity().remove();
         }
     }
-
 
     private void handleEggBridgerHit(ProjectileHitEvent event) {
         // Generate bridge blocks behind the egg's flight path

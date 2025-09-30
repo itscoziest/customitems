@@ -8,6 +8,12 @@ import com.strikesdev.customitems.CustomItems;
 import com.strikesdev.customitems.models.CustomItem;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.sk89q.worldguard.protection.regions.RegionContainer;
+import org.bukkit.Location;
+import org.bukkit.World;
 
 import java.util.List;
 import java.util.Set;
@@ -20,6 +26,41 @@ public class RegionManager {
     public RegionManager(CustomItems plugin) {
         this.plugin = plugin;
         this.worldGuardAvailable = plugin.getServer().getPluginManager().getPlugin("WorldGuard") != null;
+    }
+
+    /**
+     * Checks if a specific location is inside a named WorldGuard region.
+     * @param location The Bukkit location to check.
+     * @param regionName The name of the WorldGuard region (case-insensitive).
+     * @return true if the location is inside the specified region, false otherwise.
+     */
+    public boolean isInRegion(Location location, String regionName) {
+        if (location == null || regionName == null) {
+            return false;
+        }
+
+        World world = location.getWorld();
+        if (world == null) {
+            return false;
+        }
+
+        // Get the WorldGuard region container
+        RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
+        com.sk89q.worldguard.protection.managers.RegionManager regions = container.get(BukkitAdapter.adapt(world));
+
+        // Check if the region manager for the world exists
+        if (regions == null) {
+            return false;
+        }
+
+        // Check if a region with the given name exists
+        ProtectedRegion region = regions.getRegion(regionName);
+        if (region == null) {
+            return false;
+        }
+
+        // Finally, check if the location's coordinates are inside the region
+        return region.contains(location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
     public boolean canUseItemInRegion(Player player, CustomItem item, Location location) {

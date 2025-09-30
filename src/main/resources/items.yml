@@ -618,6 +618,8 @@ items:
     custom-data:
       type: "grave_digger"
       consume: true
-      digger-duration: 100
-      digger-speed: 1.0
       drop-items: false
+      destruction-region: "grave"
+      destruction-radius: 1
+      max-lifetime-ticks: 600
+      speed: 0.7

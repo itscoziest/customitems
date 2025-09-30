@@ -2,14 +2,21 @@ package com.strikesdev.customitems.handlers.items;
 
 import com.strikesdev.customitems.CustomItems;
 import com.strikesdev.customitems.models.CustomItem;
-import org.bukkit.*;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Fireball;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
+
+import java.util.EnumSet;
+import java.util.Set;
 
 public class GraveDiggerAction implements ItemAction {
     private final CustomItems plugin;
@@ -24,140 +31,89 @@ public class GraveDiggerAction implements ItemAction {
             return false;
         }
 
-        // Get settings from config
-        int duration = item.getCustomDataInt("digger-duration", 100); // 5 seconds default
-        boolean dropItems = item.getCustomDataBoolean("drop-items", false);
+        player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, 0.1);
 
-        // Launch a fireball as the digger projectile
-        Fireball digger = player.launchProjectile(Fireball.class);
+        String requiredRegion = item.getCustomDataString("destruction-region", "grave");
+        int destructionRadius = item.getCustomDataInt("destruction-radius", 1);
+        double speed = item.getCustomDataDouble("speed", 0.7);
 
-        // Configure the fireball
-        digger.setDirection(player.getLocation().getDirection());
-        digger.setVelocity(player.getLocation().getDirection().multiply(0.5)); // Smooth movement
-        digger.setYield(0f); // No explosion damage
-        digger.setIsIncendiary(false); // No fire
+        Location playerEyeLoc = player.getEyeLocation();
+        Vector direction = playerEyeLoc.getDirection();
+        Vector rightOffset = direction.clone().crossProduct(new Vector(0, 1, 0)).normalize().multiply(0.5);
+        Location spawnLocation = playerEyeLoc.clone().add(direction.multiply(1.0)).add(rightOffset).subtract(0, 0.5, 0);
 
-        // Add metadata to identify it as a grave digger
-        digger.setMetadata("grave_digger", new FixedMetadataValue(plugin, true));
-        digger.setMetadata("digger_owner", new FixedMetadataValue(plugin, player.getUniqueId().toString()));
-        digger.setMetadata("drop_items", new FixedMetadataValue(plugin, dropItems));
+        ArmorStand digger = player.getWorld().spawn(spawnLocation, ArmorStand.class, as -> {
+            as.setVisible(false);
+            as.setGravity(false);
+            as.setMarker(true);
+            as.setInvulnerable(true);
+            as.setArms(true);
+            as.getEquipment().setItemInMainHand(new ItemStack(Material.CRYING_OBSIDIAN));
+        });
 
-        // Create the digging task
-        createDiggingTask(digger, duration);
+        final Vector moveDirection = player.getLocation().getDirection().normalize().multiply(speed);
 
-        // Effects
-        player.playSound(player.getLocation(), Sound.ENTITY_WITHER_SPAWN, 0.5f, 2.0f);
-        player.getLocation().getWorld().spawnParticle(Particle.SMOKE_LARGE,
-                player.getEyeLocation(), 10, 0.5, 0.5, 0.5, 0.1);
+        new BukkitRunnable() {
+            private int ticksLived = 0;
+            private final Set<Material> indestructible = EnumSet.of(Material.AIR, Material.BEDROCK, Material.BARRIER, Material.END_PORTAL_FRAME);
 
-        if (event.getItem() != null) {
-            if (event.getItem().getAmount() > 1) {
-                event.getItem().setAmount(event.getItem().getAmount() - 1);
-            } else {
-                if (player.getInventory().getItemInMainHand().equals(event.getItem())) {
-                    player.getInventory().setItemInMainHand(null);
-                } else if (player.getInventory().getItemInOffHand().equals(event.getItem())) {
-                    player.getInventory().setItemInOffHand(null);
+            @Override
+            public void run() {
+                int currentMaxLifetime = plugin.getItemManager().getCustomItem("grave_digger").getCustomDataInt("max-lifetime-ticks", 200);
+
+                if (!digger.isValid() || digger.isDead() || ticksLived++ > currentMaxLifetime) {
+                    if (digger.isValid()) digger.remove();
+                    this.cancel();
+                    return;
                 }
-            }
-        }
 
-        return true;
-    }
+                // ############### THIS IS THE PRECISION FIX ###############
+                // We move the armor stand to its next position FIRST.
+                Location oldLocation = digger.getLocation();
+                Location newLocation = oldLocation.clone().add(moveDirection);
+                newLocation.setYaw(oldLocation.getYaw() + 25); // Apply spin
+                digger.teleport(newLocation);
 
-    private void createDiggingTask(Fireball digger, int duration) {
-        int taskId = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            if (!digger.isValid()) {
-                return;
-            }
+                // NOW, we check if this new, updated location is outside the region.
+                if (!plugin.getRegionManager().isInRegion(newLocation, requiredRegion)) {
+                    // If it is outside, it means we just crossed the border.
+                    // We fizzle and stop BEFORE breaking any blocks at this new location.
+                    newLocation.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, newLocation, 40, 0.5, 0.5, 0.5, 0.1);
+                    newLocation.getWorld().playSound(newLocation, Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 1.0f, 0.5f);
+                    digger.remove();
+                    this.cancel();
+                    return; // Stop the task.
+                }
+                // ################# END OF THE FIX #####################
 
-            // Dig blocks in 3x3 area around the fireball
-            digBlocks(digger);
+                // If we are here, it means the new location is safe. We can now destroy blocks.
+                digger.getWorld().spawnParticle(Particle.SQUID_INK, newLocation, 3, 0.1, 0.1, 0.1, 0);
 
-            // Visual effects
-            digger.getWorld().spawnParticle(Particle.BLOCK_CRACK,
-                    digger.getLocation(), 10, 0.8, 0.8, 0.8, 0.1,
-                    Material.STONE.createBlockData());
-            digger.getWorld().spawnParticle(Particle.SMOKE_NORMAL,
-                    digger.getLocation(), 3, 0.3, 0.3, 0.3, 0.02);
-
-        }, 0L, 4L).getTaskId();
-
-        // Remove the digger after duration
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            Bukkit.getScheduler().cancelTask(taskId);
-            if (digger.isValid()) {
-                digger.getWorld().spawnParticle(Particle.EXPLOSION_LARGE,
-                        digger.getLocation(), 2, 0.5, 0.5, 0.5, 0);
-                digger.getWorld().playSound(digger.getLocation(),
-                        Sound.ENTITY_GENERIC_EXPLODE, 0.3f, 1.2f);
-                digger.remove();
-            }
-        }, duration);
-    }
-
-    private void digBlocks(Fireball digger) {
-        Location center = digger.getLocation();
-        boolean dropItems = digger.getMetadata("drop_items").get(0).asBoolean();
-
-        // Get owner for WorldGuard checks
-        String ownerUUID = digger.getMetadata("digger_owner").get(0).asString();
-        Player owner = Bukkit.getPlayer(java.util.UUID.fromString(ownerUUID));
-
-        // Dig in 3x3x3 area centered on the fireball
-        for (int x = -1; x <= 1; x++) {
-            for (int y = -1; y <= 1; y++) {
-                for (int z = -1; z <= 1; z++) {
-                    Location blockLoc = center.clone().add(x, y, z);
-                    Block block = blockLoc.getBlock();
-
-                    // Check if we can break this block
-                    if (canBreakBlock(block, owner)) {
-                        // Drop items if configured
-                        if (dropItems && block.getType() != Material.AIR) {
-                            block.breakNaturally();
-                        } else {
-                            block.setType(Material.AIR);
+                for (int x = -destructionRadius; x <= destructionRadius; x++) {
+                    for (int y = -destructionRadius; y <= destructionRadius; y++) {
+                        for (int z = -destructionRadius; z <= destructionRadius; z++) {
+                            Block block = newLocation.clone().add(x, y, z).getBlock();
+                            if (!indestructible.contains(block.getType())) {
+                                Location blockCenter = block.getLocation().add(0.5, 0.5, 0.5);
+                                newLocation.getWorld().spawnParticle(Particle.BLOCK_DUST, blockCenter, 10, 0.5, 0.5, 0.5, block.getBlockData());
+                                newLocation.getWorld().spawnParticle(Particle.CRIT_MAGIC, blockCenter, 5, 0.5, 0.5, 0.5, 0);
+                                block.setType(Material.AIR, false);
+                            }
                         }
                     }
                 }
+                newLocation.getWorld().playSound(newLocation, Sound.BLOCK_STONE_BREAK, 0.5f, 1.5f);
+            }
+        }.runTaskTimer(plugin, 0L, 1L);
+
+        boolean consume = item.getCustomDataBoolean("consume", true);
+        if (consume && event.getItem() != null) {
+            if (event.getItem().getAmount() > 1) {
+                event.getItem().setAmount(event.getItem().getAmount() - 1);
+            } else {
+                player.getInventory().setItem(event.getHand(), null);
             }
         }
-    }
-
-    private boolean canBreakBlock(Block block, Player owner) {
-        Material type = block.getType();
-
-        // Don't break air or bedrock
-        if (type == Material.AIR || type == Material.BEDROCK) {
-            return false;
-        }
-
-        // Don't break unbreakable blocks
-        if (type == Material.BARRIER || type == Material.COMMAND_BLOCK ||
-                type == Material.STRUCTURE_VOID || type == Material.END_PORTAL_FRAME ||
-                type == Material.END_PORTAL || type == Material.NETHER_PORTAL) {
-            return false;
-        }
-
-        // Check WorldGuard by simulating a block break event
-        if (owner != null) {
-            try {
-                // Create a fake block break event to test if it's allowed
-                BlockBreakEvent testEvent = new BlockBreakEvent(block, owner);
-                Bukkit.getPluginManager().callEvent(testEvent);
-
-                // If the event was cancelled by WorldGuard or other plugins, don't break
-                if (testEvent.isCancelled()) {
-                    return false;
-                }
-            } catch (Exception e) {
-                // If there's any error, don't break the block (safe fallback)
-                return false;
-            }
-        }
-
         return true;
     }
-
 }

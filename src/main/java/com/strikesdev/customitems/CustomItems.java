@@ -27,12 +27,16 @@ public class CustomItems extends JavaPlugin {
         instance = this;
 
         // Initialize managers
+
         this.configManager = new ConfigManager(this);
         this.itemManager = new ItemManager(this);
         this.cooldownManager = new CooldownManager(this);
         this.combatManager = new CombatManager(this);
         this.actionBarManager = new ActionBarManager(this);
         this.effectManager = new EffectManager(this);
+
+
+
 
         // Initialize region manager (check for WorldGuard)
         if (getServer().getPluginManager().getPlugin("WorldGuard") != null) {
