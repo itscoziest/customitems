@@ -7,8 +7,10 @@ import org.bukkit.entity.*;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.util.Vector;
 
 public class FireballAction implements ItemAction {
+
     private final CustomItems plugin;
 
     public FireballAction(CustomItems plugin) {
@@ -21,24 +23,20 @@ public class FireballAction implements ItemAction {
             return false;
         }
 
-        // Launch fireball
         Fireball fireball = player.launchProjectile(Fireball.class);
-        fireball.setYield(0);
-        fireball.setIsIncendiary(false);
+        fireball.setYield(0); // No block damage
+        fireball.setIsIncendiary(false); // No fire
 
-        // Set custom speed
-        double speed = item.getCustomDataDouble("projectile-speed", 1.0);
-        fireball.setVelocity(fireball.getVelocity().multiply(speed));
+        double speed = item.getCustomDataDouble("projectile-speed", 1.5);
+        Vector velocity = player.getLocation().getDirection().multiply(speed);
+        fireball.setVelocity(velocity);
 
-        // Set custom damage
         double damage = item.getDamage() > 0 ? item.getDamage() : 5.0;
         fireball.setMetadata("custom_item", new FixedMetadataValue(plugin, "fireball"));
         fireball.setMetadata("damage", new FixedMetadataValue(plugin, damage));
 
-        // Sound effect
         player.playSound(player.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.2f);
 
-        // Consume item
         consumeItem(player, event);
         return true;
     }

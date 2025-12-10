@@ -9,8 +9,8 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 
-// 🌬️ Super Wind Charge Action
 public class SuperWindChargeAction implements ItemAction {
+
     private final CustomItems plugin;
 
     public SuperWindChargeAction(CustomItems plugin) {
@@ -23,25 +23,20 @@ public class SuperWindChargeAction implements ItemAction {
             return false;
         }
 
-        // Get configurable values
         double range = item.getRadius() > 0 ? item.getRadius() : 8.0;
         double launchPower = item.getCustomDataDouble("launch-power", 4.5);
         double upwardForce = item.getCustomDataDouble("upward-force", 0.6);
 
-        // Launch wind charge projectile
+        // FIX: Ensure metadata matches what ProjectileListener expects
         WindCharge windCharge = player.launchProjectile(WindCharge.class);
         windCharge.setMetadata("custom_item", new FixedMetadataValue(plugin, "super_wind_charge"));
         windCharge.setMetadata("range", new FixedMetadataValue(plugin, range));
         windCharge.setMetadata("launch_power", new FixedMetadataValue(plugin, launchPower));
         windCharge.setMetadata("upward_force", new FixedMetadataValue(plugin, upwardForce));
 
-        // Sound effect
         player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.0f, 0.8f);
-
-        // Launch particles
         player.spawnParticle(Particle.GUST, player.getLocation(), 15, 0.5, 0.5, 0.5, 0.1);
 
-        // Consume item
         consumeItem(player, event);
         return true;
     }

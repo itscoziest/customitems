@@ -2,6 +2,7 @@ package com.strikesdev.customitems.managers;
 
 import com.strikesdev.customitems.CustomItems;
 import com.strikesdev.customitems.models.CustomItem;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -23,210 +24,149 @@ public class ItemManager {
 
     public void loadCustomItems() {
         customItems.clear();
-
         FileConfiguration config = plugin.getConfigManager().getItemsConfig();
         ConfigurationSection itemsSection = config.getConfigurationSection("items");
 
-        if (itemsSection == null) {
-            plugin.getLogger().warning("No items section found in items.yml!");
-            return;
-        }
-
-        for (String itemId : itemsSection.getKeys(false)) {
-            ConfigurationSection itemSection = itemsSection.getConfigurationSection(itemId);
-            if (itemSection != null) {
-                try {
-                    CustomItem item = CustomItem.fromConfig(itemId, itemSection);
-                    customItems.put(itemId, item);
-
-                    if (plugin.getConfigManager().isDebugMode()) {
-                        plugin.getLogger().info("Loaded custom item: " + itemId);
+        if (itemsSection != null) {
+            for (String itemId : itemsSection.getKeys(false)) {
+                ConfigurationSection itemSection = itemsSection.getConfigurationSection(itemId);
+                if (itemSection != null) {
+                    try {
+                        customItems.put(itemId, CustomItem.fromConfig(itemId, itemSection));
+                    } catch (Exception e) {
+                        plugin.getLogger().warning("Failed to load: " + itemId);
                     }
-                } catch (Exception e) {
-                    plugin.getLogger().warning("Failed to load custom item: " + itemId);
-                    e.printStackTrace();
                 }
             }
         }
-
         plugin.getLogger().info("Loaded " + customItems.size() + " custom items");
     }
 
-    /**
-     * Scans the player's inventory and removes items that exceed the limit.
-     * Enforces logic: Main Inventory First, Offhand Last.
-     * Supports Region-Specific Caps.
-     */
     public void checkAndEnforceCaps(Player player) {
         if (player == null) return;
-
-        // Track counts per custom item ID
-        Map<String, Integer> itemCounts = new HashMap<>();
         PlayerInventory inv = player.getInventory();
-        ItemStack[] contents = inv.getContents(); // Includes armor and offhand in newer versions, but we treat offhand special
+        ItemStack[] contents = inv.getContents();
 
-        // 1. COUNT total items first
+        Map<String, Integer> customCounts = new HashMap<>();
+        Map<Material, Integer> vanillaCounts = new HashMap<>();
+
         for (ItemStack is : contents) {
+            if (is == null || is.getType() == Material.AIR) continue;
             CustomItem ci = getCustomItem(is);
             if (ci != null) {
-                // FIXED LINE: Explicitly use Integer.valueOf(0)
-                int currentCount = itemCounts.getOrDefault(ci.getId(), Integer.valueOf(0));
-                itemCounts.put(ci.getId(), Integer.valueOf(currentCount + is.getAmount()));
+                customCounts.put(ci.getId(), customCounts.getOrDefault(ci.getId(), 0) + is.getAmount());
+            } else {
+                vanillaCounts.put(is.getType(), vanillaCounts.getOrDefault(is.getType(), 0) + is.getAmount());
             }
         }
 
-        // 2. CHECK against caps
-        for (Map.Entry<String, Integer> entry : itemCounts.entrySet()) {
+        // Custom Items
+        for (Map.Entry<String, Integer> entry : customCounts.entrySet()) {
             String itemId = entry.getKey();
-            int currentCount = entry.getValue(); // Auto-unboxing usually works here, but if not: entry.getValue().intValue()
-
+            int currentCount = entry.getValue();
             CustomItem ci = customItems.get(itemId);
             if (ci == null) continue;
 
-            // Get cap based on Region
             int limit = plugin.getRegionManager().getApplicableCap(player, ci);
-
-            // If limit is -1 (infinite), skip
             if (limit == -1) continue;
 
             if (currentCount > limit) {
-                int toRemove = currentCount - limit;
+                removeItemByType(player, itemId, null, currentCount - limit, ci.getName());
+            }
+        }
 
-                // 3. REMOVE items
-                // Strict Order: Main Inventory (0-35) -> Offhand
+        // Vanilla Items (Reads from config.yml)
+        if (plugin.getConfigManager().isRegularItemCapsEnabled()) {
+            Map<Material, Integer> regularCaps = plugin.getConfigManager().getRegularItemCaps();
+            for (Map.Entry<Material, Integer> entry : vanillaCounts.entrySet()) {
+                Material mat = entry.getKey();
+                int currentCount = entry.getValue();
 
-                // Scan Main Storage + Hotbar (Slots 0 to 35)
-                for (int i = 0; i < 36; i++) {
-                    if (toRemove <= 0) break;
-
-                    ItemStack slotItem = inv.getItem(i);
-                    CustomItem slotCustomItem = getCustomItem(slotItem);
-
-                    if (slotCustomItem != null && slotCustomItem.getId().equals(itemId)) {
-                        int amount = slotItem.getAmount();
-
-                        if (amount <= toRemove) {
-                            // Remove entire stack
-                            inv.setItem(i, null);
-                            toRemove -= amount;
-                        } else {
-                            // Reduce stack
-                            slotItem.setAmount(amount - toRemove);
-                            toRemove = 0;
-                        }
+                if (regularCaps.containsKey(mat)) {
+                    int limit = regularCaps.get(mat);
+                    if (limit != -1 && currentCount > limit) {
+                        // Pass the material name (formatted nicely) as the item name
+                        String itemName = mat.toString().toLowerCase().replace("_", " ");
+                        removeItemByType(player, null, mat, currentCount - limit, itemName);
                     }
                 }
-
-                // Check Offhand LAST (to prevent accidental totem loss)
-                if (toRemove > 0) {
-                    ItemStack offhand = inv.getItemInOffHand();
-                    CustomItem offhandCustomItem = getCustomItem(offhand);
-
-                    if (offhandCustomItem != null && offhandCustomItem.getId().equals(itemId)) {
-                        int amount = offhand.getAmount();
-                        if (amount <= toRemove) {
-                            inv.setItemInOffHand(null);
-                            // toRemove -= amount; // technically done
-                        } else {
-                            offhand.setAmount(amount - toRemove);
-                        }
-                    }
-                }
-
-                // Notify player (Optional)
-                player.sendMessage(plugin.getConfigManager().getMessage("cap-exceeded", "{item}", ci.getName()));
             }
         }
     }
 
-    public CustomItem getCustomItem(String id) {
-        return customItems.get(id);
-    }
+    private void removeItemByType(Player player, String customId, Material material, int amountToRemove, String itemName) {
+        PlayerInventory inv = player.getInventory();
+        int remaining = amountToRemove;
 
-    public CustomItem getCustomItem(ItemStack itemStack) {
-        if (itemStack == null || itemStack.getItemMeta() == null) {
-            return null;
+        // 1. Remove from Main Inventory First
+        for (int i = 0; i < 36; i++) {
+            if (remaining <= 0) break;
+            ItemStack slotItem = inv.getItem(i);
+            if (slotItem == null || slotItem.getType() == Material.AIR) continue;
+
+            if (isMatch(slotItem, customId, material)) {
+                int amount = slotItem.getAmount();
+                if (amount <= remaining) {
+                    inv.setItem(i, null);
+                    remaining -= amount;
+                } else {
+                    slotItem.setAmount(amount - remaining);
+                    remaining = 0;
+                }
+            }
         }
 
+        // 2. Remove from Offhand Last
+        if (remaining > 0) {
+            ItemStack offhand = inv.getItemInOffHand();
+            if (offhand != null && isMatch(offhand, customId, material)) {
+                int amount = offhand.getAmount();
+                if (amount <= remaining) {
+                    inv.setItemInOffHand(null);
+                } else {
+                    offhand.setAmount(amount - remaining);
+                }
+            }
+        }
+
+        // Send message (Uses 'cap-exceeded' from messages.yml)
+        player.sendMessage(plugin.getConfigManager().getMessage("cap-exceeded", "{item}", itemName));
+    }
+
+    private boolean isMatch(ItemStack item, String customId, Material material) {
+        if (customId != null) {
+            CustomItem ci = getCustomItem(item);
+            return ci != null && ci.getId().equals(customId);
+        } else if (material != null) {
+            return item.getType() == material && !isCustomItem(item);
+        }
+        return false;
+    }
+
+    public CustomItem getCustomItem(String id) { return customItems.get(id); }
+
+    public CustomItem getCustomItem(ItemStack itemStack) {
+        if (itemStack == null || itemStack.getItemMeta() == null) return null;
         String itemId = itemStack.getItemMeta().getPersistentDataContainer().get(
                 new org.bukkit.NamespacedKey(plugin, "custom_item"),
                 org.bukkit.persistence.PersistentDataType.STRING
         );
-
         return itemId != null ? customItems.get(itemId) : null;
     }
 
-    public boolean isCustomItem(ItemStack itemStack) {
-        return getCustomItem(itemStack) != null;
-    }
-
-    public ItemStack createCustomItem(String id) {
-        CustomItem item = customItems.get(id);
-        return item != null ? item.createItemStack() : null;
-    }
-
+    public boolean isCustomItem(ItemStack itemStack) { return getCustomItem(itemStack) != null; }
+    public ItemStack createCustomItem(String id) { return createCustomItem(id, 1); }
     public ItemStack createCustomItem(String id, int amount) {
         CustomItem item = customItems.get(id);
         return item != null ? item.createItemStack(amount) : null;
     }
 
-    public Set<String> getCustomItemIds() {
-        return new HashSet<>(customItems.keySet());
-    }
-
-    public Collection<CustomItem> getAllCustomItems() {
-        return new ArrayList<>(customItems.values());
-    }
-
-    public boolean hasCustomItem(String id) {
-        return customItems.containsKey(id);
-    }
-
-    public void addCustomItem(CustomItem item) {
-        customItems.put(item.getId(), item);
-    }
-
-    public void removeCustomItem(String id) {
-        customItems.remove(id);
-    }
-
-    public void clearCustomItems() {
-        customItems.clear();
-    }
-
-    public int getCustomItemCount() {
-        return customItems.size();
-    }
-
-    // Utility methods for specific item types
-    public List<CustomItem> getItemsByType(String type) {
-        List<CustomItem> items = new ArrayList<>();
-        for (CustomItem item : customItems.values()) {
-            String itemType = item.getCustomDataString("type", "");
-            if (itemType.equalsIgnoreCase(type)) {
-                items.add(item);
-            }
-        }
-        return items;
-    }
-
+    // Required Getters for Commands/Combat
+    public Set<String> getCustomItemIds() { return new HashSet<>(customItems.keySet()); }
+    public Collection<CustomItem> getAllCustomItems() { return new ArrayList<>(customItems.values()); }
     public List<CustomItem> getItemsWithCombatCap() {
-        List<CustomItem> items = new ArrayList<>();
-        for (CustomItem item : customItems.values()) {
-            if (item.getCombatCap() > 0) {
-                items.add(item);
-            }
-        }
-        return items;
-    }
-
-    public List<CustomItem> getItemsWithRegionRestrictions() {
-        List<CustomItem> items = new ArrayList<>();
-        for (CustomItem item : customItems.values()) {
-            if (!item.getAllowedRegions().isEmpty()) {
-                items.add(item);
-            }
-        }
-        return items;
+        List<CustomItem> list = new ArrayList<>();
+        for (CustomItem i : customItems.values()) if (i.getCombatCap() > 0) list.add(i);
+        return list;
     }
 }

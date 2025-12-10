@@ -10,6 +10,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 public class StrengthCookieAction implements ItemAction {
+
     private final CustomItems plugin;
 
     public StrengthCookieAction(CustomItems plugin) {
@@ -22,45 +23,36 @@ public class StrengthCookieAction implements ItemAction {
             return false;
         }
 
-        // Apply strength effect
+        // Apply effects
         if (!item.getEffects().isEmpty()) {
             item.getEffects().forEach(player::addPotionEffect);
         } else {
-            // Default strength 3 effect for 8 seconds if not configured
             player.addPotionEffect(new PotionEffect(
                     PotionEffectType.INCREASE_DAMAGE,
-                    (item.getDuration() > 0 ? item.getDuration() : 8) * 20, // Convert seconds to ticks
-                    2 // Amplifier 2 = Strength III (0-based indexing)
+                    (item.getDuration() > 0 ? item.getDuration() : 8) * 20,
+                    1 // Strength II
             ));
         }
 
-        // Play eating sound and particles
+        // Sound & Visuals
         player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
-
-        // Add some visual effects
         Location loc = player.getLocation().add(0, 1, 0);
         player.getWorld().spawnParticle(Particle.HEART, loc, 5, 0.5, 0.5, 0.5, 0.1);
-        player.getWorld().spawnParticle(Particle.CRIT, loc, 10, 0.3, 0.3, 0.3, 0.1);
 
-        // Consume item
+        // FIX: You had the consumption code pasted TWICE here in your original file.
+        // I have removed the duplicate. Now it only eats 1.
+        consumeItem(player, event);
+
+        return true;
+    }
+
+    private void consumeItem(Player player, PlayerInteractEvent event) {
+        if (event.getItem() == null) return;
+
         if (event.getItem().getAmount() > 1) {
             event.getItem().setAmount(event.getItem().getAmount() - 1);
         } else {
             player.getInventory().setItem(event.getHand(), null);
         }
-
-        if (event.getItem() != null) {
-            if (event.getItem().getAmount() > 1) {
-                event.getItem().setAmount(event.getItem().getAmount() - 1);
-            } else {
-                if (player.getInventory().getItemInMainHand().equals(event.getItem())) {
-                    player.getInventory().setItemInMainHand(null);
-                } else if (player.getInventory().getItemInOffHand().equals(event.getItem())) {
-                    player.getInventory().setItemInOffHand(null);
-                }
-            }
-        }
-
-        return true;
     }
 }

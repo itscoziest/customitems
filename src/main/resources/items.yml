@@ -644,3 +644,13 @@ items:
       consume: false
       max-range: 40.0
       pull-strength: 1.5
+
+regular-items:
+  combat-caps:
+    enabled: true
+    items:
+      ENCHANTED_GOLDEN_APPLE: 1
+      GOLDEN_APPLE: 3
+      ENDER_PEARL: 2
+      TOTEM_OF_UNDYING: 1
+      COBWEB: 4

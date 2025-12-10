@@ -10,8 +10,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 public class ConfigManager {
@@ -51,8 +51,6 @@ public class ConfigManager {
         if (!plugin.getDataFolder().exists()) {
             plugin.getDataFolder().mkdirs();
         }
-
-        // Save default configs if they don't exist
         saveDefaultConfig("config.yml");
         saveDefaultConfig("items.yml");
         saveDefaultConfig("messages.yml");
@@ -66,27 +64,20 @@ public class ConfigManager {
     }
 
     private void loadDefaults() {
-        // Load default values from resources
         try {
-            InputStream defConfigStream = plugin.getResource("config.yml");
-            if (defConfigStream != null) {
-                YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defConfigStream));
-                config.setDefaults(defConfig);
-            }
-
-            InputStream defItemsStream = plugin.getResource("items.yml");
-            if (defItemsStream != null) {
-                YamlConfiguration defItemsConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defItemsStream));
-                itemsConfig.setDefaults(defItemsConfig);
-            }
-
-            InputStream defMessagesStream = plugin.getResource("messages.yml");
-            if (defMessagesStream != null) {
-                YamlConfiguration defMessagesConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defMessagesStream));
-                messagesConfig.setDefaults(defMessagesConfig);
-            }
+            loadDefault("config.yml", config);
+            loadDefault("items.yml", itemsConfig);
+            loadDefault("messages.yml", messagesConfig);
         } catch (Exception e) {
             plugin.getLogger().log(Level.WARNING, "Could not load default configurations", e);
+        }
+    }
+
+    private void loadDefault(String fileName, FileConfiguration targetConfig) {
+        InputStream defStream = plugin.getResource(fileName);
+        if (defStream != null) {
+            YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defStream));
+            targetConfig.setDefaults(defConfig);
         }
     }
 
@@ -100,19 +91,12 @@ public class ConfigManager {
         }
     }
 
-    public FileConfiguration getConfig() {
-        return config;
-    }
+    // --- GETTERS ---
 
-    public FileConfiguration getItemsConfig() {
-        return itemsConfig;
-    }
+    public FileConfiguration getConfig() { return config; }
+    public FileConfiguration getItemsConfig() { return itemsConfig; }
+    public FileConfiguration getMessagesConfig() { return messagesConfig; }
 
-    public FileConfiguration getMessagesConfig() {
-        return messagesConfig;
-    }
-
-    // Utility methods
     public boolean isActionBarCooldownEnabled() {
         return config.getBoolean("cooldown.display.action-bar.enabled", true);
     }
@@ -137,60 +121,47 @@ public class ConfigManager {
         return config.getInt("combat.duration", 15);
     }
 
-    public String getMessage(String key) {
-        String prefix = messagesConfig.getString("messages.prefix", "&8[&6CustomItems&8]&r ");
-        String message = messagesConfig.getString("messages." + key, "&cMessage not found: " + key);
-
-        // Replace {prefix} first, then colorize everything
-        message = message.replace("{prefix}", prefix);
-        return ChatUtils.colorize(message);
-    }
-
+    // --- FIX: READ FROM ITEMS CONFIG INSTEAD OF MAIN CONFIG ---
     public boolean isRegularItemCapsEnabled() {
-        return config.getBoolean("regular-items.combat-caps.enabled", true);
+        // Changed 'config' to 'itemsConfig'
+        return itemsConfig.getBoolean("regular-items.combat-caps.enabled", false);
     }
 
     public Map<Material, Integer> getRegularItemCaps() {
         Map<Material, Integer> caps = new HashMap<>();
 
-        ConfigurationSection itemsSection = config.getConfigurationSection("regular-items.combat-caps.items");
+        // Changed 'config' to 'itemsConfig'
+        ConfigurationSection itemsSection = itemsConfig.getConfigurationSection("regular-items.combat-caps.items");
+
         if (itemsSection != null) {
             for (String materialName : itemsSection.getKeys(false)) {
                 Material material = Material.matchMaterial(materialName);
                 if (material != null) {
                     int cap = itemsSection.getInt(materialName, -1);
                     if (cap > 0) {
-                        // FIXED LINE BELOW: Explicitly wrap int in Integer.valueOf()
                         caps.put(material, Integer.valueOf(cap));
                     }
+                } else {
+                    plugin.getLogger().warning("Invalid material in regular-items cap: " + materialName);
                 }
             }
         }
-
         return caps;
     }
+    // ----------------------------------------------------------
 
     public String getMessage(String key, String... replacements) {
-        // 1. Get the raw message from config (DO NOT colorize yet)
         String message = messagesConfig.getString("messages." + key, "&cMessage not found: " + key);
-
-        // 2. Get and Replace prefix
         String prefix = messagesConfig.getString("messages.prefix", "&8[&6CustomItems&8]&r ");
         message = message.replace("{prefix}", prefix);
 
-        // 3. Replace other placeholders
         for (int i = 0; i < replacements.length; i += 2) {
             if (i + 1 < replacements.length) {
-                // Ensure we replace the text
-                String placeholder = replacements[i];
                 String value = replacements[i + 1];
                 if (value == null) value = "";
-
-                message = message.replace(placeholder, value);
+                message = message.replace(replacements[i], value);
             }
         }
-
-        // 4. Colorize the FINAL result (This ensures item names with & codes get colored)
         return ChatUtils.colorize(message);
     }
 }
