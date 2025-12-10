@@ -29,7 +29,10 @@ public class DogArmyAction implements ItemAction {
         // Get number of dogs from config or use default
         int dogCount = item.getCustomDataInt("dog-count", 2);
         int dogHealth = item.getCustomDataInt("dog-health", 20); // Default 10 hearts
-        int dogDuration = item.getCustomDataInt("dog-duration", 300); // 15 seconds default
+
+        // FIX: Get duration in seconds and convert to ticks
+        int dogDurationSeconds = item.getCustomDataInt("dog-duration", 15); // Default 15 seconds
+        long dogDurationTicks = (long) dogDurationSeconds * 20L;
 
         Location spawnLocation = player.getLocation();
 
@@ -70,7 +73,7 @@ public class DogArmyAction implements ItemAction {
                     wolf.getWorld().spawnParticle(Particle.CLOUD, wolf.getLocation(), 10, 0.5, 0.5, 0.5, 0.1);
                     wolf.remove();
                 }
-            }, dogDuration);
+            }, dogDurationTicks); // Use the corrected ticks
         }
 
         // Play sound and effects

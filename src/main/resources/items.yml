@@ -623,3 +623,24 @@ items:
       destruction-radius: 1
       max-lifetime-ticks: 600
       speed: 0.7
+
+
+  # 🪝 Grappling Hook
+  grappling_hook:
+    name: "&e&lGrappling Hook"
+    material: FISHING_ROD
+    lore:
+      - "&7Throw a hook to pull yourself"
+      - "&7towards where it lands!"
+      - "&eRange: &c40 blocks"
+    cooldown: 5
+    combat-cap: 2
+    permission: "customitems.use.grappling_hook"
+    allowed-regions:
+      - "test_region"
+      - "pvp-arena"
+    custom-data:
+      type: "grappling_hook"
+      consume: false
+      max-range: 40.0
+      pull-strength: 1.5

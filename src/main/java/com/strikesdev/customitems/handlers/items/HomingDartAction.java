@@ -23,8 +23,10 @@ public class HomingDartAction implements ItemAction {
             return false;
         }
 
-        // Find target
-        Player target = findNearestPlayer(player, 20.0);
+        // FIX: Use item's range property for finding target
+        double searchRange = item.getRange() > 0 ? item.getRange() : 20.0;
+        Player target = findNearestPlayer(player, searchRange);
+
         if (target == null) {
             player.sendMessage("§cNo target found within range!");
             return false;

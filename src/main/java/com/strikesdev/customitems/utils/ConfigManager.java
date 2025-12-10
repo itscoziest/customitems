@@ -160,7 +160,8 @@ public class ConfigManager {
                 if (material != null) {
                     int cap = itemsSection.getInt(materialName, -1);
                     if (cap > 0) {
-                        caps.put(material, cap);
+                        // FIXED LINE BELOW: Explicitly wrap int in Integer.valueOf()
+                        caps.put(material, Integer.valueOf(cap));
                     }
                 }
             }
@@ -170,18 +171,26 @@ public class ConfigManager {
     }
 
     public String getMessage(String key, String... replacements) {
-        String message = ChatUtils.colorize(messagesConfig.getString("messages." + key, "&cMessage not found: " + key));
+        // 1. Get the raw message from config (DO NOT colorize yet)
+        String message = messagesConfig.getString("messages." + key, "&cMessage not found: " + key);
 
-        // Replace {prefix} first
-        String prefix = ChatUtils.colorize(messagesConfig.getString("messages.prefix", "&8[&6CustomItems&8]&r "));
+        // 2. Get and Replace prefix
+        String prefix = messagesConfig.getString("messages.prefix", "&8[&6CustomItems&8]&r ");
         message = message.replace("{prefix}", prefix);
 
-        // Replace other placeholders
+        // 3. Replace other placeholders
         for (int i = 0; i < replacements.length; i += 2) {
             if (i + 1 < replacements.length) {
-                message = message.replace(replacements[i], replacements[i + 1]);
+                // Ensure we replace the text
+                String placeholder = replacements[i];
+                String value = replacements[i + 1];
+                if (value == null) value = "";
+
+                message = message.replace(placeholder, value);
             }
         }
-        return message;
+
+        // 4. Colorize the FINAL result (This ensures item names with & codes get colored)
+        return ChatUtils.colorize(message);
     }
 }

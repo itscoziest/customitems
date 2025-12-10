@@ -24,6 +24,7 @@ public class CustomItem {
     private double radius;
     private int cooldown;
     private int combatCap;
+    private Map<String, Integer> regionCaps; // New: Region specific caps
     private List<String> allowedRegions;
     private String permission;
     private Map<String, Object> customData;
@@ -43,6 +44,7 @@ public class CustomItem {
         this.radius = 0.0;
         this.cooldown = 0;
         this.combatCap = -1; // -1 means no limit
+        this.regionCaps = new HashMap<>();
         this.allowedRegions = new ArrayList<>();
         this.permission = "";
         this.customData = new HashMap<>();
@@ -68,6 +70,16 @@ public class CustomItem {
         item.radius = section.getDouble("radius", 0.0);
         item.cooldown = section.getInt("cooldown", 0);
         item.combatCap = section.getInt("combat-cap", -1);
+
+        // Load Region Specific Caps
+        if (section.isConfigurationSection("region-caps")) {
+            ConfigurationSection regionCapSection = section.getConfigurationSection("region-caps");
+            for (String regionName : regionCapSection.getKeys(false)) {
+                // Explicitly box the int to Integer to fix your error
+                item.regionCaps.put(regionName, Integer.valueOf(regionCapSection.getInt(regionName)));
+            }
+        }
+
         item.allowedRegions = section.getStringList("allowed-regions");
         item.permission = section.getString("permission", "");
         item.unbreakable = section.getBoolean("unbreakable", false);
@@ -101,7 +113,8 @@ public class CustomItem {
                 Enchantment enchantment = Enchantment.getByName(enchantKey.toUpperCase());
                 if (enchantment != null) {
                     int level = enchantSection.getInt(enchantKey, 1);
-                    item.enchantments.put(enchantment, level);
+                    // Explicitly box the int to Integer to fix your error
+                    item.enchantments.put(enchantment, Integer.valueOf(level));
                 }
             }
         }
@@ -145,7 +158,8 @@ public class CustomItem {
 
             // Set custom model data
             if (customModelData > 0) {
-                meta.setCustomModelData(customModelData);
+                // Explicitly box the int to Integer to fix your error
+                meta.setCustomModelData(Integer.valueOf(customModelData));
             }
 
             // Add custom NBT tag to identify the item
@@ -201,6 +215,11 @@ public class CustomItem {
     public void setCooldown(int cooldown) { this.cooldown = cooldown; }
     public int getCombatCap() { return combatCap; }
     public void setCombatCap(int combatCap) { this.combatCap = combatCap; }
+
+    // Region Cap Getters
+    public Map<String, Integer> getRegionCaps() { return regionCaps; }
+    public void setRegionCaps(Map<String, Integer> regionCaps) { this.regionCaps = regionCaps; }
+
     public List<String> getAllowedRegions() { return allowedRegions; }
     public void setAllowedRegions(List<String> allowedRegions) { this.allowedRegions = allowedRegions; }
     public String getPermission() { return permission; }

@@ -28,11 +28,9 @@ public class PlayerInteractListener implements Listener {
 
         if (item == null) return;
 
-        // Check if it's a custom item
         CustomItem customItem = plugin.getItemManager().getCustomItem(item);
         if (customItem == null) return;
 
-        // Check permissions
         if (!customItem.getPermission().isEmpty() && !player.hasPermission(customItem.getPermission())) {
             String message = plugin.getConfigManager().getMessage("no-permission");
             player.sendMessage(message);
@@ -40,7 +38,6 @@ public class PlayerInteractListener implements Listener {
             return;
         }
 
-        // Check region restrictions
         RegionManager regionManager = plugin.getRegionManager();
         if (regionManager != null && !regionManager.canUseItemInRegion(player, customItem, player.getLocation())) {
             String message = regionManager.getRegionDenialMessage(customItem);
@@ -49,7 +46,6 @@ public class PlayerInteractListener implements Listener {
             return;
         }
 
-        // Check cooldown
         CooldownManager cooldownManager = plugin.getCooldownManager();
         if (cooldownManager.hasCooldown(player, customItem.getId())) {
             int remaining = cooldownManager.getRemainingCooldownSeconds(player, customItem.getId());
@@ -58,7 +54,6 @@ public class PlayerInteractListener implements Listener {
                     "{time}", String.valueOf(remaining));
             player.sendMessage(message);
 
-            // Show action bar cooldown
             ActionBarManager actionBarManager = plugin.getActionBarManager();
             actionBarManager.sendCooldownMessage(player, customItem.getName(), remaining);
 
@@ -66,7 +61,6 @@ public class PlayerInteractListener implements Listener {
             return;
         }
 
-        // Check combat restrictions
         CombatManager combatManager = plugin.getCombatManager();
         if (!combatManager.canUseItemInCombat(player, customItem)) {
             String message = plugin.getConfigManager().getMessage("combat.cannot-use-item",
@@ -76,24 +70,17 @@ public class PlayerInteractListener implements Listener {
             return;
         }
 
-        // Handle the item usage
         boolean success = itemHandler.handleItemUse(player, customItem, event);
 
         if (success) {
-            // Set cooldown
             if (customItem.getCooldown() > 0) {
                 cooldownManager.setCooldown(player, customItem.getId(), customItem.getCooldown());
 
-                // Show action bar cooldown
                 ActionBarManager actionBarManager = plugin.getActionBarManager();
                 actionBarManager.sendCooldownMessage(player, customItem.getName(), customItem.getCooldown());
             }
 
-            // Cancel the event to prevent normal item behavior
             event.setCancelled(true);
         }
-
-
     }
-
 }

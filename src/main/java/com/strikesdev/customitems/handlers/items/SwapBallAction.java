@@ -3,9 +3,11 @@ package com.strikesdev.customitems.handlers.items;
 import com.strikesdev.customitems.CustomItems;
 import com.strikesdev.customitems.models.CustomItem;
 import org.bukkit.*;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Snowball;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 
 public class SwapBallAction implements ItemAction {
@@ -21,25 +23,25 @@ public class SwapBallAction implements ItemAction {
             return false;
         }
 
-        // Launch ender pearl (visual effect)
-        EnderPearl pearl = player.launchProjectile(EnderPearl.class);
-        pearl.setMetadata("custom_item", new FixedMetadataValue(plugin, "swap_ball"));
-        pearl.setMetadata("no_teleport", new FixedMetadataValue(plugin, true));
-        // Add a reference to the player who threw it
-        pearl.setMetadata("caster_uuid", new FixedMetadataValue(plugin, player.getUniqueId().toString()));
+        // Launch a Snowball instead of EnderPearl to prevent "Combat Teleport" blocks
+        Snowball projectile = player.launchProjectile(Snowball.class);
 
+        // Disguise the snowball as an Ender Pearl visually
+        projectile.setItem(new ItemStack(Material.ENDER_PEARL));
+
+        // Set metadata for the listener
+        projectile.setMetadata("custom_item", new FixedMetadataValue(plugin, "swap_ball"));
+        projectile.setMetadata("caster_uuid", new FixedMetadataValue(plugin, player.getUniqueId().toString()));
 
         // Sound effect
-        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_PEARL_THROW, 1.0f, 1.2f);
+        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_PEARL_THROW, 1.0f, 1.0f);
 
-        // *** THIS IS THE ONLY CHANGE: Consume the item on throw, as you wanted ***
+        // Consume item
         consumeItem(player, event);
-
         return true;
     }
 
     private void consumeItem(Player player, PlayerInteractEvent event) {
-        if (event.getItem() == null) return;
         if (event.getItem().getAmount() > 1) {
             event.getItem().setAmount(event.getItem().getAmount() - 1);
         } else {

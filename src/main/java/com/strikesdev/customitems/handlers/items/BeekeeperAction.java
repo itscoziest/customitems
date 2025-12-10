@@ -128,10 +128,14 @@ public class BeekeeperAction implements ItemAction {
                         // If close to target, force attack
                         if (bee.getTarget() instanceof Player) {
                             Player targetPlayer = (Player) bee.getTarget();
-                            if (bee.getLocation().distance(targetPlayer.getLocation()) < 3.0) {
-                                // Direct damage to ensure continuous attacking
-                                targetPlayer.damage(1.0, bee);
-                                targetPlayer.spawnParticle(Particle.CRIT, targetPlayer.getLocation().add(0, 1, 0), 5);
+
+                            // FIX: Check world equality before checking distance to prevent crash
+                            if (targetPlayer.getWorld().equals(bee.getWorld())) {
+                                if (bee.getLocation().distance(targetPlayer.getLocation()) < 3.0) {
+                                    // Direct damage to ensure continuous attacking
+                                    targetPlayer.damage(1.0, bee);
+                                    targetPlayer.spawnParticle(Particle.CRIT, targetPlayer.getLocation().add(0, 1, 0), 5);
+                                }
                             }
                         }
                     }
@@ -147,6 +151,7 @@ public class BeekeeperAction implements ItemAction {
         double closestDistance = range;
 
         for (Player player : Bukkit.getOnlinePlayers()) {
+            // Existing world check logic here is correct, but the crash was inside the runnable above
             if (player.equals(owner) || !player.getWorld().equals(center.getWorld())) {
                 continue;
             }

@@ -1,6 +1,8 @@
 messages:
   prefix: "&8[&6CustomItems&8]&r "
 
+  cap-exceeded: "{prefix}&cYou cannot carry more than that amount of {item}&c!"
+
   no-permission: "{prefix}&cYou don't have permission to use this item!"
 
   item:

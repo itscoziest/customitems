@@ -4,7 +4,6 @@ plugins {
 }
 
 group = 'com.strikesdev'
-version = '1.0.0'
 description = 'CustomItems Plugin'
 
 java {

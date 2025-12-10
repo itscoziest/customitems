@@ -21,12 +21,11 @@ public class ItemHandler {
     }
 
     private void registerItemActions() {
-        // Register all custom item actions
         itemActions.put("instant_tnt", new InstantTNTAction(plugin));
         itemActions.put("force_field", new ForceFieldAction(plugin));
         itemActions.put("exploding_snowman", new ExplodingSnowmanAction(plugin));
         itemActions.put("speed_berries", new SpeedBerriesAction(plugin));
-        itemActions.put("strength_cookie", new StrengthCookieAction(plugin)); // NEW: Strength Cookie
+        itemActions.put("strength_cookie", new StrengthCookieAction(plugin));
         itemActions.put("illusion", new IllusionAction(plugin));
         itemActions.put("golem_fists", new GolemFistsAction(plugin));
         itemActions.put("snap_ring", new SnapRingAction(plugin));
@@ -53,6 +52,7 @@ public class ItemHandler {
         itemActions.put("lasso", new LassoAction(plugin));
         itemActions.put("taser", new TaserAction(plugin));
         itemActions.put("grave_digger", new GraveDiggerAction(plugin));
+        itemActions.put("grappling_hook", new GrapplingHookAction(plugin));
     }
 
     public boolean handleItemUse(Player player, CustomItem item, PlayerInteractEvent event) {
@@ -69,17 +69,14 @@ public class ItemHandler {
             }
         }
 
-        // Default behavior if no specific action found
         return handleDefaultItem(player, item, event);
     }
 
     private boolean handleDefaultItem(Player player, CustomItem item, PlayerInteractEvent event) {
-        // Apply effects if any
         if (!item.getEffects().isEmpty()) {
             item.getEffects().forEach(player::addPotionEffect);
         }
 
-        // Consume item if configured
         boolean consumeItem = item.getCustomDataBoolean("consume", true);
         if (consumeItem && event.getItem() != null) {
             if (event.getItem().getAmount() > 1) {

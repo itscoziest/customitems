@@ -6,6 +6,7 @@ import com.strikesdev.customitems.managers.*;
 import com.strikesdev.customitems.utils.ConfigManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
 public class CustomItems extends JavaPlugin {
@@ -19,24 +20,21 @@ public class CustomItems extends JavaPlugin {
     private ActionBarManager actionBarManager;
     private EffectManager effectManager;
 
-    // Cleanup tasks
+    // Tasks
     private BukkitTask cleanupTask;
+    private BukkitTask itemCapTask; // <--- NEW TASK
 
     @Override
     public void onEnable() {
         instance = this;
 
         // Initialize managers
-
         this.configManager = new ConfigManager(this);
         this.itemManager = new ItemManager(this);
         this.cooldownManager = new CooldownManager(this);
         this.combatManager = new CombatManager(this);
         this.actionBarManager = new ActionBarManager(this);
         this.effectManager = new EffectManager(this);
-
-
-
 
         // Initialize region manager (check for WorldGuard)
         if (getServer().getPluginManager().getPlugin("WorldGuard") != null) {
@@ -56,17 +54,21 @@ public class CustomItems extends JavaPlugin {
         // Register commands
         getCommand("customitems").setExecutor(new CustomItemsCommand(this));
 
-        // Start cleanup task (runs every 30 seconds)
+        // Start tasks
         startCleanupTask();
+        startItemCapTask(); // <--- CRITICAL: START THE CAP ENFORCEMENT
 
         getLogger().info("CustomItems plugin has been enabled!");
     }
 
     @Override
     public void onDisable() {
-        // Cancel cleanup task
-        if (cleanupTask != null) {
+        // Cancel tasks
+        if (cleanupTask != null && !cleanupTask.isCancelled()) {
             cleanupTask.cancel();
+        }
+        if (itemCapTask != null && !itemCapTask.isCancelled()) {
+            itemCapTask.cancel();
         }
 
         // Cleanup managers
@@ -102,6 +104,16 @@ public class CustomItems extends JavaPlugin {
             combatManager.cleanupExpiredCombat();
             effectManager.cleanupExpiredEffects();
         }, 600L, 600L); // Run every 30 seconds
+    }
+
+    // --- NEW METHOD ---
+    private void startItemCapTask() {
+        // Run every 20 ticks (1 second) to enforce caps
+        itemCapTask = Bukkit.getScheduler().runTaskTimer(this, () -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                itemManager.checkAndEnforceCaps(player);
+            }
+        }, 20L, 20L);
     }
 
     public void reload() {

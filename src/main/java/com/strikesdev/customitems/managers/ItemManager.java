@@ -4,7 +4,9 @@ import com.strikesdev.customitems.CustomItems;
 import com.strikesdev.customitems.models.CustomItem;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,6 +50,93 @@ public class ItemManager {
         }
 
         plugin.getLogger().info("Loaded " + customItems.size() + " custom items");
+    }
+
+    /**
+     * Scans the player's inventory and removes items that exceed the limit.
+     * Enforces logic: Main Inventory First, Offhand Last.
+     * Supports Region-Specific Caps.
+     */
+    public void checkAndEnforceCaps(Player player) {
+        if (player == null) return;
+
+        // Track counts per custom item ID
+        Map<String, Integer> itemCounts = new HashMap<>();
+        PlayerInventory inv = player.getInventory();
+        ItemStack[] contents = inv.getContents(); // Includes armor and offhand in newer versions, but we treat offhand special
+
+        // 1. COUNT total items first
+        for (ItemStack is : contents) {
+            CustomItem ci = getCustomItem(is);
+            if (ci != null) {
+                // FIXED LINE: Explicitly use Integer.valueOf(0)
+                int currentCount = itemCounts.getOrDefault(ci.getId(), Integer.valueOf(0));
+                itemCounts.put(ci.getId(), Integer.valueOf(currentCount + is.getAmount()));
+            }
+        }
+
+        // 2. CHECK against caps
+        for (Map.Entry<String, Integer> entry : itemCounts.entrySet()) {
+            String itemId = entry.getKey();
+            int currentCount = entry.getValue(); // Auto-unboxing usually works here, but if not: entry.getValue().intValue()
+
+            CustomItem ci = customItems.get(itemId);
+            if (ci == null) continue;
+
+            // Get cap based on Region
+            int limit = plugin.getRegionManager().getApplicableCap(player, ci);
+
+            // If limit is -1 (infinite), skip
+            if (limit == -1) continue;
+
+            if (currentCount > limit) {
+                int toRemove = currentCount - limit;
+
+                // 3. REMOVE items
+                // Strict Order: Main Inventory (0-35) -> Offhand
+
+                // Scan Main Storage + Hotbar (Slots 0 to 35)
+                for (int i = 0; i < 36; i++) {
+                    if (toRemove <= 0) break;
+
+                    ItemStack slotItem = inv.getItem(i);
+                    CustomItem slotCustomItem = getCustomItem(slotItem);
+
+                    if (slotCustomItem != null && slotCustomItem.getId().equals(itemId)) {
+                        int amount = slotItem.getAmount();
+
+                        if (amount <= toRemove) {
+                            // Remove entire stack
+                            inv.setItem(i, null);
+                            toRemove -= amount;
+                        } else {
+                            // Reduce stack
+                            slotItem.setAmount(amount - toRemove);
+                            toRemove = 0;
+                        }
+                    }
+                }
+
+                // Check Offhand LAST (to prevent accidental totem loss)
+                if (toRemove > 0) {
+                    ItemStack offhand = inv.getItemInOffHand();
+                    CustomItem offhandCustomItem = getCustomItem(offhand);
+
+                    if (offhandCustomItem != null && offhandCustomItem.getId().equals(itemId)) {
+                        int amount = offhand.getAmount();
+                        if (amount <= toRemove) {
+                            inv.setItemInOffHand(null);
+                            // toRemove -= amount; // technically done
+                        } else {
+                            offhand.setAmount(amount - toRemove);
+                        }
+                    }
+                }
+
+                // Notify player (Optional)
+                player.sendMessage(plugin.getConfigManager().getMessage("cap-exceeded", "{item}", ci.getName()));
+            }
+        }
     }
 
     public CustomItem getCustomItem(String id) {
