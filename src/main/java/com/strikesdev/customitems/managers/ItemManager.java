@@ -2,6 +2,7 @@ package com.strikesdev.customitems.managers;
 
 import com.strikesdev.customitems.CustomItems;
 import com.strikesdev.customitems.models.CustomItem;
+import com.strikesdev.customitems.utils.ConfigManager;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -60,7 +61,7 @@ public class ItemManager {
             }
         }
 
-        // Custom Items
+        // Custom Items Logic
         for (Map.Entry<String, Integer> entry : customCounts.entrySet()) {
             String itemId = entry.getKey();
             int currentCount = entry.getValue();
@@ -75,17 +76,22 @@ public class ItemManager {
             }
         }
 
-        // Vanilla Items (Reads from config.yml)
+        // Vanilla Items Logic
         if (plugin.getConfigManager().isRegularItemCapsEnabled()) {
-            Map<Material, Integer> regularCaps = plugin.getConfigManager().getRegularItemCaps();
+            // FIX: Use the new ADVANCED method to get Region support
+            Map<Material, ConfigManager.VanillaItemCap> regularCaps = plugin.getConfigManager().getAdvancedRegularItemCaps();
+
             for (Map.Entry<Material, Integer> entry : vanillaCounts.entrySet()) {
                 Material mat = entry.getKey();
                 int currentCount = entry.getValue();
 
                 if (regularCaps.containsKey(mat)) {
-                    int limit = regularCaps.get(mat);
+                    ConfigManager.VanillaItemCap capData = regularCaps.get(mat);
+
+                    // Ask RegionManager for the correct limit
+                    int limit = plugin.getRegionManager().getApplicableLimit(player, capData.globalLimit, capData.regionLimits);
+
                     if (limit != -1 && currentCount > limit) {
-                        // Pass the material name (formatted nicely) as the item name
                         String itemName = mat.toString().toLowerCase().replace("_", " ");
                         removeItemByType(player, null, mat, currentCount - limit, itemName);
                     }
@@ -98,7 +104,6 @@ public class ItemManager {
         PlayerInventory inv = player.getInventory();
         int remaining = amountToRemove;
 
-        // 1. Remove from Main Inventory First
         for (int i = 0; i < 36; i++) {
             if (remaining <= 0) break;
             ItemStack slotItem = inv.getItem(i);
@@ -116,7 +121,6 @@ public class ItemManager {
             }
         }
 
-        // 2. Remove from Offhand Last
         if (remaining > 0) {
             ItemStack offhand = inv.getItemInOffHand();
             if (offhand != null && isMatch(offhand, customId, material)) {
@@ -129,7 +133,6 @@ public class ItemManager {
             }
         }
 
-        // Send message (Uses 'cap-exceeded' from messages.yml)
         player.sendMessage(plugin.getConfigManager().getMessage("cap-exceeded", "{item}", itemName));
     }
 
@@ -144,7 +147,6 @@ public class ItemManager {
     }
 
     public CustomItem getCustomItem(String id) { return customItems.get(id); }
-
     public CustomItem getCustomItem(ItemStack itemStack) {
         if (itemStack == null || itemStack.getItemMeta() == null) return null;
         String itemId = itemStack.getItemMeta().getPersistentDataContainer().get(
@@ -161,7 +163,6 @@ public class ItemManager {
         return item != null ? item.createItemStack(amount) : null;
     }
 
-    // Required Getters for Commands/Combat
     public Set<String> getCustomItemIds() { return new HashSet<>(customItems.keySet()); }
     public Collection<CustomItem> getAllCustomItems() { return new ArrayList<>(customItems.values()); }
     public List<CustomItem> getItemsWithCombatCap() {

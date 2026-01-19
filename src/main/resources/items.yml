@@ -1,3 +1,114 @@
+regular-items:
+  combat-caps:
+    enabled: true
+    items:
+      ENCHANTED_GOLDEN_APPLE:
+        limit: -1           # Global limit (everywhere else)
+        region-caps:
+          spawn: 64        # Allowed 64 in spawn
+          pvp-arena: 1
+      GOLDEN_APPLE:
+        limit: 256
+        region-caps:
+          cpvpbox: 256
+          swordbox: 32
+      TOTEM_OF_UNDYING:
+        limit: 40
+        region-caps:
+          __global__: 40
+          cpvpbox: 40
+          swordbox: 3
+      COBWEB:
+        limit: 64
+      WINDCHARGE:
+        limit: 32
+      TNT_MINECART:
+        limit: -1
+      SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      WHITE_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      GRAY_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      LIGHT_GRAY_WHITE_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      BROWN_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      RED_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      ORANGE_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      YELLOW_WHITE_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      BLUE_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      LIME_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      GREEN_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      LIGHT_BLUE_WHITE_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      PURPLE_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      PINK_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      MAGENTA_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      BLACK_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
+      CYAN_SHULKER_BOX:
+        limit: 100
+        region-caps:
+          cpvpbox: -1
+          swordbox: -1
 items:
   # 🧨 Instant TNT
   instant_tnt:
@@ -6,12 +117,12 @@ items:
     lore:
       - "&7Explodes immediately when placed"
       - "&7No fuse delay!"
-    damage: 4.0
+    damage: 2.2
     cooldown: 5
-    combat-cap: 3
+    combat-cap: 64
     permission: "customitems.use.instant_tnt"
     allowed-regions:
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "instant_tnt"
       consume: true
@@ -23,13 +134,13 @@ items:
     lore:
       - "&7Creates a protective glass sphere"
       - "&7around you for 10 seconds"
-    radius: 3.0
+    radius: 5.0
     duration: 10
     cooldown: 30
-    combat-cap: 1
+    combat-cap: 32
     permission: "customitems.use.force_field"
     allowed-regions:
-      - "safe-zone"
+      - "playarea"
     custom-data:
       type: "force_field"
       consume: true
@@ -41,20 +152,19 @@ items:
     lore:
       - "&7Spawns a snowman that explodes"
       - "&7giving nearby enemies slowness"
-    damage: 3.0
-    radius: 5.0
-    duration: 5
-    cooldown: 20
-    combat-cap: 2
+    damage: 2
+    radius: 6.6
+    duration: 1.8
+    cooldown: 40
+    combat-cap: 10
     permission: "customitems.use.exploding_snowman"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "exploding_snowman"
       consume: true
       slowness-duration: 100
-      slowness-amplifier: 1
+      slowness-amplifier: 2
 
   # 🍓 Speed Berries
   speed_berries:
@@ -64,11 +174,11 @@ items:
       - "&7Sweet berries that make you fast"
       - "&7Gives Speed II for 30 seconds"
     duration: 30
-    cooldown: 10
-    combat-cap: 5
+    cooldown: 40
+    combat-cap: 32
     permission: "customitems.use.speed_berries"
     allowed-regions:
-      - "test_region"
+      - "playarea"
     effects:
       speed:
         amplifier: 1
@@ -84,18 +194,17 @@ items:
     lore:
       - "&7A delicious cookie that makes"
       - "&7you incredibly strong!"
-      - "&6Strength III &7for &e8 seconds"
-    duration: 8
+      - "&6Strength II &7for &e10 seconds"
+    duration: 10
     cooldown: 30
     combat-cap: 32
     permission: "customitems.use.strength_cookie"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     effects:
       strength:
-        amplifier: 2
-        duration: 8
+        amplifier: 1
+        duration: 10
     custom-data:
       type: "strength_cookie"
       consume: true
@@ -106,14 +215,13 @@ items:
     material: ENDER_PEARL
     lore:
       - "&7Turn invisible and spawn"
-      - "&72 decoy zombies for 5 seconds"
-    duration: 5
+      - "&72 decoy zombies for 7 seconds"
+    duration: 7
     cooldown: 45
-    combat-cap: 1
+    combat-cap: 16
     permission: "customitems.use.illusion"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     effects:
       invisibility:
         amplifier: 0
@@ -132,13 +240,12 @@ items:
       - "&7Launches nearby players upward"
       - "&7in a small radius"
     radius: 3.0
-    range: 7.0
+    range: 9.0
     cooldown: 25
-    combat-cap: 2
+    combat-cap: 64
     permission: "customitems.use.golem_fists"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "golem_fists"
       consume: true
@@ -153,11 +260,10 @@ items:
     radius: 4.0
     damage: 12.0
     cooldown: 20
-    combat-cap: 2
+    combat-cap: 64
     permission: "customitems.use.snap_ring"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "snap_ring"
       consume: true
@@ -170,17 +276,17 @@ items:
       - "&7Launches you much farther"
       - "&7than a normal wind charge"
     range: 15.0
-    radius: 8.0
-    cooldown: 10
-    combat-cap: 3
+    radius: 3.0
+    cooldown: 16
+    combat-cap: 64
     permission: "customitems.use.super_wind_charge"
     allowed-regions:
-      - "test_region"
+      - "playarea"
     custom-data:
       type: "super_wind_charge"
       consume: true
-      launch-power: 4.5
-      upward-force: 0.6
+      launch-power: 1.8
+      upward-force: 1
       particle-count: 50
       sound-volume: 2.0
 
@@ -191,13 +297,12 @@ items:
     lore:
       - "&7Throwable fireball that explodes"
       - "&7on impact without fire"
-    damage: 5.0
-    cooldown: 8
-    combat-cap: 4
+    damage: 3.4
+    cooldown: 20
+    combat-cap: 64
     permission: "customitems.use.fireball"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "fireball"
       consume: true
@@ -213,11 +318,10 @@ items:
     radius: 3.0
     duration: 30
     cooldown: 60
-    combat-cap: 1
+    combat-cap: 64
     permission: "customitems.use.healing_campfire"
     allowed-regions:
-      - "test_region"
-      - "safe-zone"
+      - "playarea"
     custom-data:
       type: "healing_campfire"
       consume: true
@@ -226,17 +330,16 @@ items:
   # 💣 Dynamite
   dynamite:
     name: "&c&lDynamite"
-    material: STICK
+    material: RED_CANDLE
     lore:
-      - "&7Throwable TNT with 1 second"
+      - "&7Throwable TNT with 4 second"
       - "&7cooldown that explodes on impact"
-    damage: 4.0
-    cooldown: 1
-    combat-cap: 10
+    damage: 2
+    cooldown: 4
+    combat-cap: 64
     permission: "customitems.use.dynamite"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "dynamite"
       consume: true
@@ -250,10 +353,10 @@ items:
       - "&7in the direction you're looking"
     range: 7.0
     cooldown: 30
-    combat-cap: 2
+    combat-cap: 16
     permission: "customitems.use.leap"
     allowed-regions:
-      - "test_region"
+      - "playarea"
     custom-data:
       type: "leap"
       consume: true
@@ -261,18 +364,17 @@ items:
   # 💀 Creeper
   creeper:
     name: "&2&lCreeper"
-    material: CREEPER_HEAD
+    material: LIME_CONCRETE_POWDER
     lore:
       - "&7Moves randomly for 3 seconds"
       - "&7then explodes like instant TNT"
-    damage: 4.0
-    duration: 3
+    damage: 3.0
+    duration: 2.2
     cooldown: 25
-    combat-cap: 2
+    combat-cap: 64
     permission: "customitems.use.creeper"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "creeper"
       consume: true
@@ -282,21 +384,21 @@ items:
     name: "&4&lVampire Sword"
     material: IRON_SWORD
     lore:
-      - "&7Iron Sword with Sharpness VI"
-      - "&7Heals you on enemy kill"
-    damage: 6.0
+      - "&7Chance to heal on hit"
+      - "&cChance: &f25% &c| &cHeal: &f2"
+    damage: 7.0
     cooldown: 0
-    combat-cap: 1
+    combat-cap: 16
     permission: "customitems.use.vampire_sword"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     enchantments:
-      sharpness: 6
+      sharpness: 7
     custom-data:
       type: "vampire_sword"
       consume: false
-      heal-on-kill: 4
+      heal-chance: 25.0
+      heal-amount: 2.0
 
   # 🥚 Egg Bridger
   egg_bridger:
@@ -305,11 +407,11 @@ items:
     lore:
       - "&7Throws eggs that generate a bridge"
       - "&7behind them on flight path"
-    cooldown: 15
-    combat-cap: 3
+    cooldown: 10
+    combat-cap: 64
     permission: "customitems.use.egg_bridger"
     allowed-regions:
-      - "test_region"
+      - "playarea"
     custom-data:
       type: "egg_bridger"
       consume: true
@@ -327,11 +429,10 @@ items:
     radius: 4.0
     duration: 30
     cooldown: 45
-    combat-cap: 1
+    combat-cap: 16
     permission: "customitems.use.ice_fire"
     allowed-regions:
-      - "test_region"
-      - "safe-zone"
+      - "playarea"
     custom-data:
       type: "ice_fire"
       consume: true
@@ -346,11 +447,10 @@ items:
       - "&7When hit, players receive"
       - "&7Slowness for 3 seconds"
     cooldown: 5
-    combat-cap: 8
+    combat-cap: 16
     permission: "customitems.use.slowness_snowball"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "slowness_snowball"
       consume: true
@@ -358,16 +458,15 @@ items:
   # 🔄 Swap Ball
   swap_ball:
     name: "&5&lSwap Ball"
-    material: ENDER_PEARL
+    material: SLIME_BALL
     lore:
       - "&7On hit, swaps positions"
       - "&7with the target player"
     cooldown: 20
-    combat-cap: 2
+    combat-cap: 16
     permission: "customitems.use.swap_ball"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "swap_ball"
       consume: true
@@ -381,11 +480,10 @@ items:
       - "&7homes in on the target"
     damage: 6.0
     cooldown: 30
-    combat-cap: 1
+    combat-cap: 64
     permission: "customitems.use.homing_dart"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "homing_dart"
       consume: true
@@ -398,19 +496,18 @@ items:
       - "&7Turns ground into honey blocks"
       - "&7and spawns 3 angry bees"
     radius: 3.0
-    duration: 7
+    duration: 8
     cooldown: 40
-    combat-cap: 1
+    combat-cap: 16
     permission: "customitems.use.beekeeper"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "beekeeper"
       consume: true
-      honey-block-type: "HONEY_BLOCK"
+      honey-block-type: "HONEY_COMB_BLOCK"
       bee-count: 3
-      bee-duration: 30
+      bee-duration: 15
 
   # 💨 Smoke Bomb
   smoke_bomb:
@@ -422,10 +519,10 @@ items:
     duration: 12
     radius: 5.0
     cooldown: 45
-    combat-cap: 1
+    combat-cap: 16
     permission: "customitems.use.smoke_bomb"
     allowed-regions:
-      - "test_region"
+      - "playarea"
     custom-data:
       type: "smoke_bomb"
       consume: true
@@ -438,17 +535,16 @@ items:
       - "&7Sweet honey that speeds up"
       - "&7your mining and digging!"
       - "&eHaste II &7for &e8 seconds"
-    duration: 8
+    duration: 10
     cooldown: 8
     combat-cap: 64
     permission: "customitems.use.haste_potion"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     effects:
       haste:
         amplifier: 1
-        duration: 8
+        duration: 10
     custom-data:
       type: "haste_potion"
       consume: true
@@ -460,18 +556,16 @@ items:
     lore:
       - "&7A crossbow that shoots explosive"
       - "&7arrows that detonate on impact!"
-      - "&cExplosion Power: &e2.0"
-    damage: 2.0
+    damage: 2.5
     cooldown: 0
-    combat-cap: 0
+    combat-cap: 16
     permission: "customitems.use.explosive_crossbow"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "explosive_crossbow"
       consume: false
-      explosion-power: 2.0
+      explosion-power: 1.3
 
   # ⚡ Lightning Wand
   lightning_wand:
@@ -480,18 +574,16 @@ items:
     lore:
       - "&7Channel the power of thunder!"
       - "&7Strike lightning where you look"
-      - "&eDamage: &c8.0 &7+ Lightning damage"
-    damage: 8.0
+    damage: 12.0
     cooldown: 20
     combat-cap: 32
     permission: "customitems.use.lightning_wand"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "lightning_wand"
       consume: false
-      lightning-damage: 8.0
+      lightning-damage: 12.0
 
   # 🔊 Sonic Boom
   sonic_boom:
@@ -500,19 +592,18 @@ items:
     lore:
       - "&7Harness the power of the deep dark!"
       - "&7Unleash a devastating sonic attack"
-      - "&9Damage: &c10.0 &7| &9Range: &e30 blocks"
-    damage: 10.0
-    cooldown: 20
+      - "&9Damage: &c10.0 &7| &9Range: &e20 blocks"
+    damage: 5.0
+    cooldown: 30
     combat-cap: 16
     permission: "customitems.use.sonic_boom"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "sonic_boom"
       consume: true
-      sonic-damage: 10.0
-      sonic-range: 30.0
+      sonic-damage: 15.0
+      sonic-range: 20.0
 
   # 🐉 Dragon Breath
   dragon_breath:
@@ -522,19 +613,18 @@ items:
       - "&7Harness the power of the Ender Dragon!"
       - "&7Launch a fireball that creates lingering"
       - "&7dragon breath on impact"
-      - "&5Damage: &c3.0 &7| &5Duration: &e5 seconds"
+      - "&5Damage: &c3.0 &7| &5Duration: &e15 seconds"
     damage: 3.0
     cooldown: 20
     combat-cap: 32
     permission: "customitems.use.dragon_breath"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "dragon_breath"
       consume: true
       breath-damage: 3.0
-      breath-duration: 100
+      breath-duration: 15
 
   # 🐕 Dog Army
   dog_army:
@@ -545,11 +635,10 @@ items:
       - "&7They will protect you and attack your enemies"
       - "&6Dogs: &e2 &7| &6Duration: &e15 seconds"
     cooldown: 45
-    combat-cap: 8
+    combat-cap: 16
     permission: "customitems.use.dog_army"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "dog_army"
       consume: true
@@ -570,8 +659,7 @@ items:
     combat-cap: 16
     permission: "customitems.use.lasso"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "lasso"
       consume: true
@@ -589,11 +677,10 @@ items:
       - "&eStun Duration: &c3 seconds"
       - "&eRange: &c25 blocks"
     cooldown: 15
-    combat-cap: 8
+    combat-cap: 16
     permission: "customitems.use.taser"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "taser"
       consume: true
@@ -610,11 +697,10 @@ items:
       - "&8Duration: &75 seconds &8| &8Area: &73x3x3"
       - "&cCannot break bedrock or protected areas"
     cooldown: 30
-    combat-cap: 4
+    combat-cap: 16
     permission: "customitems.use.grave_digger"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "grave_digger"
       consume: true
@@ -622,7 +708,7 @@ items:
       destruction-region: "grave"
       destruction-radius: 1
       max-lifetime-ticks: 600
-      speed: 0.7
+      speed: 2
 
 
   # 🪝 Grappling Hook
@@ -634,23 +720,86 @@ items:
       - "&7towards where it lands!"
       - "&eRange: &c40 blocks"
     cooldown: 5
-    combat-cap: 2
+    combat-cap: 16
     permission: "customitems.use.grappling_hook"
     allowed-regions:
-      - "test_region"
-      - "pvp-arena"
+      - "playarea"
     custom-data:
       type: "grappling_hook"
       consume: false
       max-range: 40.0
       pull-strength: 1.5
 
-regular-items:
-  combat-caps:
-    enabled: true
-    items:
-      ENCHANTED_GOLDEN_APPLE: 1
-      GOLDEN_APPLE: 3
-      ENDER_PEARL: 2
-      TOTEM_OF_UNDYING: 1
-      COBWEB: 4
+  # Fire sword
+  fire_sword:
+    name: "&6&lFire Sword"
+    material: GOLDEN_SWORD
+    lore:
+      - "&7Chance to ignite enemies on hit"
+      - "&6Chance: &f30% &6| &6Duration: &f4s"
+    damage: 6.0
+    cooldown: 0
+    combat-cap: 16
+    permission: "customitems.use.fire_sword"
+    allowed-regions:
+      - "playarea"
+    enchantments:
+      fire_aspect: 1
+    custom-data:
+      type: "fire_sword"
+      consume: false
+      fire-chance: 30.0
+      fire-duration: 4
+
+  cat_cannon:
+    name: "&b&lCat Cannon"
+    material: BLAZE_ROD
+    lore:
+      - "&7Shoots explosive cats!"
+      - "&7Cats despawn after impact"
+    cooldown: 2
+    combat-cap: 1
+    permission: "customitems.use.cat_cannon"
+    allowed-regions:
+      - "playarea"
+    custom-data:
+      type: "cat_cannon"
+      consume: false
+      damage: 8.0
+      speed: 1.5
+
+    # Storm Item
+    storm_item:
+      name: "&9&lStorm Caller"
+      material: TRIDENT
+      lore:
+        - "&7Summons a rain of cats and dogs"
+        - "&7from the sky!"
+      cooldown: 60
+      combat-cap: 1
+      permission: "customitems.use.storm_item"
+      allowed-regions:
+        - "playarea"
+      custom-data:
+        type: "storm_item"
+        consume: true
+        radius: 8.0
+        duration: 5
+        damage: 4.0
+
+    # Health Soup
+    health_soup:
+      name: "&a&lHealth Soup"
+      material: MUSHROOM_STEW
+      lore:
+        - "&7Right click to heal instantly"
+        - "&aHeals: &f4 hearts"
+      cooldown: 1
+      combat-cap: 1
+      permission: "customitems.use.health_soup"
+      allowed-regions:
+        - "playarea"
+      custom-data:
+        type: "health_soup"
+        consume: true
+        heal-amount: 8.0

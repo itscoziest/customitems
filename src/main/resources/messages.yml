@@ -3,6 +3,8 @@ messages:
 
   cap-exceeded: "{prefix}&cYou cannot carry more than that amount of {item}&c!"
 
+  regular-cap-applied: "{prefix} &aCannot hold more than that!"
+
   no-permission: "{prefix}&cYou don't have permission to use this item!"
 
   item:

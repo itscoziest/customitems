@@ -9,6 +9,7 @@ cooldown:
     item-name:
       enabled: false
 
+
 # Combat System Settings
 combat:
   duration: 15 # seconds
@@ -24,6 +25,3 @@ region:
 regular-items:
   combat-caps:
     enabled: true
-    items:
-      FIREWORK_ROCKET: 12
-      TRIDENT: 1
