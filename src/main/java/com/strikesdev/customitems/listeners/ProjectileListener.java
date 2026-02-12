@@ -5,7 +5,6 @@ import com.strikesdev.customitems.models.CustomItem;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.*;
@@ -36,7 +35,6 @@ public class ProjectileListener implements Listener {
         Projectile projectile = event.getEntity();
 
         // FIX: Region Check (Prevents shooting into protected regions from outside)
-        // This solves Issue #5: "Super wind charge can be used in regions its not supposed to"
         if (plugin.getRegionManager().isWorldGuardAvailable()) {
             Location impactLoc = projectile.getLocation();
             if (event.getHitEntity() != null) impactLoc = event.getHitEntity().getLocation();
@@ -54,6 +52,12 @@ public class ProjectileListener implements Listener {
                     }
                 }
             }
+        }
+
+        // --- NEW: Cat Cannon Logic ---
+        if (projectile instanceof Snowball && projectile.hasMetadata("cat_cannon")) {
+            handleCatCannonHit(event);
+            return;
         }
 
         // --- Wind Charge Logic ---
@@ -121,6 +125,30 @@ public class ProjectileListener implements Listener {
         }
     }
 
+    private void handleCatCannonHit(ProjectileHitEvent event) {
+        Snowball snowball = (Snowball) event.getEntity();
+        double damage = 6.0; // Fallback default
+        if (snowball.hasMetadata("damage")) {
+            damage = snowball.getMetadata("damage").get(0).asDouble();
+        }
+
+        // Explosion Effect
+        snowball.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, snowball.getLocation(), 1);
+        snowball.getWorld().playSound(snowball.getLocation(), Sound.ENTITY_CAT_HISS, 1.0f, 1.0f);
+
+        // Damage entity if direct hit
+        if (event.getHitEntity() instanceof LivingEntity) {
+            Entity shooter = (Entity) snowball.getShooter();
+            ((LivingEntity) event.getHitEntity()).damage(damage, shooter);
+        }
+
+        // Remove the passenger (the cat)
+        if (!snowball.getPassengers().isEmpty()) {
+            snowball.getPassengers().get(0).remove();
+        }
+        snowball.remove();
+    }
+
     private void onDragonBreathImpact(ProjectileHitEvent event) {
         if (!(event.getEntity() instanceof Snowball)) return;
 
@@ -161,7 +189,6 @@ public class ProjectileListener implements Listener {
                         if (nearbyEntity instanceof Player && !nearbyEntity.equals(caster)) {
                             Player victim = (Player) nearbyEntity;
 
-                            double currentHealth = victim.getHealth();
                             double damageToApply = damagePerTick;
 
                             victim.damage(damageToApply, caster);

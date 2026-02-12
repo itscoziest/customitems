@@ -1,6 +1,7 @@
 package com.strikesdev.customitems.handlers.items;
 
 import com.strikesdev.customitems.CustomItems;
+import com.strikesdev.customitems.handlers.ItemAction;
 import com.strikesdev.customitems.models.CustomItem;
 import org.bukkit.*;
 import org.bukkit.entity.EntityType;
@@ -10,7 +11,6 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.inventory.EquipmentSlot;
 
 
 public class DogArmyAction implements ItemAction {

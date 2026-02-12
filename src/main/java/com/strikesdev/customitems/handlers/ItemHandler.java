@@ -35,7 +35,7 @@ public class ItemHandler {
         itemActions.put("dynamite", new DynamiteAction(plugin));
         itemActions.put("leap", new LeapAction(plugin));
         itemActions.put("creeper", new CreeperAction(plugin));
-        itemActions.put("vampire_sword", new VampireSwordAction(plugin));
+        // Removed old vampire_sword action, it is now handled in EntityListener onHit
         itemActions.put("egg_bridger", new EggBridgerAction(plugin));
         itemActions.put("ice_fire", new IceFireAction(plugin));
         itemActions.put("slowness_snowball", new SlownessSnowballAction(plugin));
@@ -53,6 +53,11 @@ public class ItemHandler {
         itemActions.put("taser", new TaserAction(plugin));
         itemActions.put("grave_digger", new GraveDiggerAction(plugin));
         itemActions.put("grappling_hook", new GrapplingHookAction(plugin));
+
+        // --- NEW ITEMS ---
+        itemActions.put("cat_cannon", new CatCannonAction(plugin));
+        itemActions.put("storm_item", new StormItemAction(plugin));
+        itemActions.put("health_soup", new HealthSoupAction(plugin));
     }
 
     public boolean handleItemUse(Player player, CustomItem item, PlayerInteractEvent event) {
@@ -91,13 +96,5 @@ public class ItemHandler {
 
     public void registerItemAction(String type, ItemAction action) {
         itemActions.put(type, action);
-    }
-
-    public void unregisterItemAction(String type) {
-        itemActions.remove(type);
-    }
-
-    public boolean hasItemAction(String type) {
-        return itemActions.containsKey(type);
     }
 }

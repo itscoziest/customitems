@@ -1,6 +1,7 @@
 package com.strikesdev.customitems.handlers.items;
 
 import com.strikesdev.customitems.CustomItems;
+import com.strikesdev.customitems.handlers.ItemAction;
 import com.strikesdev.customitems.models.CustomItem;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;

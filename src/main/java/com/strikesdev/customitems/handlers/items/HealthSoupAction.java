@@ -3,15 +3,17 @@ package com.strikesdev.customitems.handlers.items;
 import com.strikesdev.customitems.CustomItems;
 import com.strikesdev.customitems.handlers.ItemAction;
 import com.strikesdev.customitems.models.CustomItem;
-import org.bukkit.*;
+import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 
-public class SpeedBerriesAction implements ItemAction {
+public class HealthSoupAction implements ItemAction {
     private final CustomItems plugin;
 
-    public SpeedBerriesAction(CustomItems plugin) {
+    public HealthSoupAction(CustomItems plugin) {
         this.plugin = plugin;
     }
 
@@ -21,26 +23,22 @@ public class SpeedBerriesAction implements ItemAction {
             return false;
         }
 
-        // Apply speed effect
-        if (!item.getEffects().isEmpty()) {
-            item.getEffects().forEach(player::addPotionEffect);
-        } else {
-            // Default speed effect if not configured
-            player.addPotionEffect(new org.bukkit.potion.PotionEffect(
-                    org.bukkit.potion.PotionEffectType.SPEED,
-                    (item.getDuration() > 0 ? item.getDuration() : 10) * 20,
-                    1
-            ));
+        if (player.getHealth() >= player.getMaxHealth()) {
+            return false;
         }
 
-        // Play eating sound
+        double healAmount = item.getCustomDataDouble("heal-amount", 6.0); // 3 hearts
+        double newHealth = Math.min(player.getMaxHealth(), player.getHealth() + healAmount);
+
+        player.setHealth(newHealth);
         player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
 
-        // Consume item
+        // Replace soup with bowl
         if (event.getItem().getAmount() > 1) {
             event.getItem().setAmount(event.getItem().getAmount() - 1);
+            player.getInventory().addItem(new ItemStack(Material.BOWL));
         } else {
-            player.getInventory().setItem(event.getHand(), null);
+            player.getInventory().setItem(event.getHand(), new ItemStack(Material.BOWL));
         }
 
         return true;

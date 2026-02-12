@@ -1,12 +1,12 @@
 package com.strikesdev.customitems.handlers.items;
 
 import com.strikesdev.customitems.CustomItems;
+import com.strikesdev.customitems.handlers.ItemAction;
 import com.strikesdev.customitems.models.CustomItem;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class SnapRingAction implements ItemAction {

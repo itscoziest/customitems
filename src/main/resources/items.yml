@@ -2,14 +2,10 @@ regular-items:
   combat-caps:
     enabled: true
     items:
-      ENCHANTED_GOLDEN_APPLE:
-        limit: -1           # Global limit (everywhere else)
-        region-caps:
-          spawn: 64        # Allowed 64 in spawn
-          pvp-arena: 1
       GOLDEN_APPLE:
-        limit: 256
+        limit: 3000
         region-caps:
+          __global__: 3000
           cpvpbox: 256
           swordbox: 32
       TOTEM_OF_UNDYING:
@@ -19,11 +15,21 @@ regular-items:
           cpvpbox: 40
           swordbox: 3
       COBWEB:
-        limit: 64
-      WINDCHARGE:
-        limit: 32
+        limit: 3000
+        region-caps:
+          __global__: 300
+          cpvpbox: 64
+          swordbox: 64
+      WIND_CHARGE:
+        limit: 3000
+        region-caps:
+          __global__: 3000
+          cpvpbox: 64
+          swordbox: 64
       TNT_MINECART:
         limit: -1
+        region-caps:
+          __global__: -1
       SHULKER_BOX:
         limit: 100
         region-caps:
@@ -148,7 +154,7 @@ items:
   # ☃️ Exploding Snowman
   exploding_snowman:
     name: "&f&lExploding Snowman"
-    material: SNOWBALL
+    material: PUMPKIN
     lore:
       - "&7Spawns a snowman that explodes"
       - "&7giving nearby enemies slowness"
@@ -156,7 +162,7 @@ items:
     radius: 6.6
     duration: 1.8
     cooldown: 40
-    combat-cap: 10
+    combat-cap: 16
     permission: "customitems.use.exploding_snowman"
     allowed-regions:
       - "playarea"
@@ -278,7 +284,7 @@ items:
     range: 15.0
     radius: 3.0
     cooldown: 16
-    combat-cap: 64
+    combat-cap: 32
     permission: "customitems.use.super_wind_charge"
     allowed-regions:
       - "playarea"
@@ -299,7 +305,7 @@ items:
       - "&7on impact without fire"
     damage: 3.4
     cooldown: 20
-    combat-cap: 64
+    combat-cap: 32
     permission: "customitems.use.fireball"
     allowed-regions:
       - "playarea"
@@ -318,7 +324,7 @@ items:
     radius: 3.0
     duration: 30
     cooldown: 60
-    combat-cap: 64
+    combat-cap: 16
     permission: "customitems.use.healing_campfire"
     allowed-regions:
       - "playarea"
@@ -371,7 +377,7 @@ items:
     damage: 3.0
     duration: 2.2
     cooldown: 25
-    combat-cap: 64
+    combat-cap: 32
     permission: "customitems.use.creeper"
     allowed-regions:
       - "playarea"
@@ -384,11 +390,10 @@ items:
     name: "&4&lVampire Sword"
     material: IRON_SWORD
     lore:
-      - "&7Chance to heal on hit"
-      - "&cChance: &f25% &c| &cHeal: &f2"
+      - "&7Heals you on enemy kill"
     damage: 7.0
     cooldown: 0
-    combat-cap: 16
+    combat-cap: 50
     permission: "customitems.use.vampire_sword"
     allowed-regions:
       - "playarea"
@@ -397,8 +402,7 @@ items:
     custom-data:
       type: "vampire_sword"
       consume: false
-      heal-chance: 25.0
-      heal-amount: 2.0
+      heal-on-kill: 8
 
   # 🥚 Egg Bridger
   egg_bridger:
@@ -447,7 +451,7 @@ items:
       - "&7When hit, players receive"
       - "&7Slowness for 3 seconds"
     cooldown: 5
-    combat-cap: 16
+    combat-cap: 32
     permission: "customitems.use.slowness_snowball"
     allowed-regions:
       - "playarea"
@@ -505,7 +509,7 @@ items:
     custom-data:
       type: "beekeeper"
       consume: true
-      honey-block-type: "HONEY_COMB_BLOCK"
+      honey-block-type: "HONEYCOMB_BLOCK"
       bee-count: 3
       bee-duration: 15
 
@@ -516,10 +520,10 @@ items:
     lore:
       - "&7Creates heavy smoke coverage"
       - "&7for maximum concealment"
-    duration: 12
-    radius: 5.0
-    cooldown: 45
-    combat-cap: 16
+    duration: 18
+    radius: 3.0
+    cooldown: 15
+    combat-cap: 64
     permission: "customitems.use.smoke_bomb"
     allowed-regions:
       - "playarea"
@@ -558,7 +562,7 @@ items:
       - "&7arrows that detonate on impact!"
     damage: 2.5
     cooldown: 0
-    combat-cap: 16
+    combat-cap: 50
     permission: "customitems.use.explosive_crossbow"
     allowed-regions:
       - "playarea"
@@ -595,7 +599,7 @@ items:
       - "&9Damage: &c10.0 &7| &9Range: &e20 blocks"
     damage: 5.0
     cooldown: 30
-    combat-cap: 16
+    combat-cap: 32
     permission: "customitems.use.sonic_boom"
     allowed-regions:
       - "playarea"
@@ -656,7 +660,7 @@ items:
       - "&ePull Strength: &c1.5 &7| &eRange: &c30 blocks"
       - "&7Stronger pull for longer distances"
     cooldown: 8
-    combat-cap: 16
+    combat-cap: 32
     permission: "customitems.use.lasso"
     allowed-regions:
       - "playarea"
@@ -670,7 +674,7 @@ items:
   # ⚡ Taser
   taser:
     name: "&e&lTaser"
-    material: BLAZE_ROD
+    material: BREEZE_ROD
     lore:
       - "&7Stun your enemies with electricity!"
       - "&7Freezes the target in place"
@@ -697,7 +701,7 @@ items:
       - "&8Duration: &75 seconds &8| &8Area: &73x3x3"
       - "&cCannot break bedrock or protected areas"
     cooldown: 30
-    combat-cap: 16
+    combat-cap: 50
     permission: "customitems.use.grave_digger"
     allowed-regions:
       - "playarea"
@@ -730,51 +734,52 @@ items:
       max-range: 40.0
       pull-strength: 1.5
 
-  # Fire sword
-  fire_sword:
-    name: "&6&lFire Sword"
-    material: GOLDEN_SWORD
-    lore:
-      - "&7Chance to ignite enemies on hit"
-      - "&6Chance: &f30% &6| &6Duration: &f4s"
-    damage: 6.0
-    cooldown: 0
-    combat-cap: 16
-    permission: "customitems.use.fire_sword"
-    allowed-regions:
-      - "playarea"
-    enchantments:
-      fire_aspect: 1
-    custom-data:
-      type: "fire_sword"
-      consume: false
-      fire-chance: 30.0
-      fire-duration: 4
 
-  cat_cannon:
-    name: "&b&lCat Cannon"
-    material: BLAZE_ROD
-    lore:
-      - "&7Shoots explosive cats!"
-      - "&7Cats despawn after impact"
-    cooldown: 2
-    combat-cap: 1
-    permission: "customitems.use.cat_cannon"
-    allowed-regions:
-      - "playarea"
-    custom-data:
-      type: "cat_cannon"
-      consume: false
-      damage: 8.0
-      speed: 1.5
+    # 🐱 Cat Cannon
+    cat_cannon:
+      name: "&b&lCat Cannon"
+      material: BLAZE_ROD
+      lore:
+        - "&7Shoots explosive cats!"
+        - "&bDamage: &c6.0"
+      cooldown: 5
+      combat-cap: 16
+      permission: "customitems.use.cat_cannon"
+      allowed-regions:
+        - "playarea"
+      custom-data:
+        type: "cat_cannon"
+        consume: false
+        damage: 6.0
+        speed: 1.5
 
-    # Storm Item
+    # 🔥 Fire Sword
+    fire_sword:
+      name: "&6&lFire Sword"
+      material: GOLDEN_SWORD
+      lore:
+        - "&7Chance to set enemies on fire!"
+      damage: 6.0
+      cooldown: 0
+      combat-cap: 50
+      permission: "customitems.use.fire_sword"
+      allowed-regions:
+        - "playarea"
+      enchantments:
+        fire_aspect: 1
+      custom-data:
+        type: "fire_sword"
+        consume: false
+        fire-chance: 40.0
+        fire-duration: 5
+
+    # ⛈️ Storm Item
     storm_item:
-      name: "&9&lStorm Caller"
+      name: "&9&lAnimal Storm"
       material: TRIDENT
       lore:
-        - "&7Summons a rain of cats and dogs"
-        - "&7from the sky!"
+        - "&7Rains cats and dogs from the sky!"
+        - "&7Damage enemies in the radius."
       cooldown: 60
       combat-cap: 1
       permission: "customitems.use.storm_item"
@@ -786,20 +791,20 @@ items:
         radius: 8.0
         duration: 5
         damage: 4.0
+        rain-height: 10
 
-    # Health Soup
+    # 🍲 Health Soup
     health_soup:
       name: "&a&lHealth Soup"
       material: MUSHROOM_STEW
       lore:
-        - "&7Right click to heal instantly"
-        - "&aHeals: &f4 hearts"
+        - "&7Instant health restoration."
       cooldown: 1
-      combat-cap: 1
+      combat-cap: 64
       permission: "customitems.use.health_soup"
       allowed-regions:
         - "playarea"
       custom-data:
         type: "health_soup"
         consume: true
-        heal-amount: 8.0
+        heal-amount: 6

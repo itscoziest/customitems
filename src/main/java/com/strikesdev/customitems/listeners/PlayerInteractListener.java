@@ -30,16 +30,12 @@ public class PlayerInteractListener implements Listener {
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
 
-        // --- FIX FOR DOUBLE MESSAGES ---
-        // If the player is using their OFF_HAND, we check if their MAIN_HAND has a custom item.
-        // If it does, we ignore the offhand interaction completely to prevent running logic twice.
         if (event.getHand() == EquipmentSlot.OFF_HAND) {
             ItemStack mainHandItem = player.getInventory().getItemInMainHand();
             if (plugin.getItemManager().isCustomItem(mainHandItem)) {
-                return; // Stop processing offhand if mainhand is busy
+                return;
             }
         }
-        // -------------------------------
 
         if (item == null) return;
 
@@ -96,6 +92,10 @@ public class PlayerInteractListener implements Listener {
             if (customItem.getCooldown() > 0) {
                 cooldownManager.setCooldown(player, customItem.getId(), customItem.getCooldown());
                 plugin.getActionBarManager().sendCooldownMessage(player, customItem.getName(), customItem.getCooldown());
+
+                // --- FIX: VANILLA COOLOWN ANIMATION ---
+                // This adds the white overlay to the hotbar item
+                player.setCooldown(customItem.getMaterial(), customItem.getCooldown() * 20);
             }
             event.setCancelled(true);
         }

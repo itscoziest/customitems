@@ -1,9 +1,9 @@
 package com.strikesdev.customitems.handlers.items;
 
 import com.strikesdev.customitems.CustomItems;
+import com.strikesdev.customitems.handlers.ItemAction;
 import com.strikesdev.customitems.models.CustomItem;
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 public class ExplosiveCrossbowAction implements ItemAction {

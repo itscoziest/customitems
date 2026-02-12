@@ -1,4 +1,4 @@
-package com.strikesdev.customitems.handlers.items;
+package com.strikesdev.customitems.handlers;
 
 import com.strikesdev.customitems.models.CustomItem;
 import org.bukkit.entity.Player;
