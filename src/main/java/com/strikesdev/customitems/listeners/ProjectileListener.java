@@ -125,6 +125,7 @@ public class ProjectileListener implements Listener {
         }
     }
 
+    // --- NEW METHOD ---
     private void handleCatCannonHit(ProjectileHitEvent event) {
         Snowball snowball = (Snowball) event.getEntity();
         double damage = 6.0; // Fallback default

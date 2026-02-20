@@ -6,17 +6,18 @@ import com.strikesdev.customitems.models.CustomItem;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.entity.Cat;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Wolf;
+import org.bukkit.entity.*;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.scheduler.BukkitRunnable;
-import java.util.concurrent.ThreadLocalRandom;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class StormItemAction implements ItemAction {
     private final CustomItems plugin;
+    private final Random random = new Random();
 
     public StormItemAction(CustomItems plugin) {
         this.plugin = plugin;
@@ -28,36 +29,16 @@ public class StormItemAction implements ItemAction {
             return false;
         }
 
-        double radius = item.getCustomDataDouble("radius", 10.0);
-        int durationSeconds = item.getCustomDataInt("duration", 5);
+        double radius = item.getCustomDataDouble("radius", 8.0);
+
+        // FIX: Calculate duration first and store in a FINAL variable for the inner class
+        int configDuration = item.getDuration();
+        final int durationSeconds = (configDuration <= 0) ? 5 : configDuration;
+
+        double damage = item.getCustomDataDouble("damage", 4.0);
+        int rainHeight = item.getCustomDataInt("rain-height", 10);
 
         Location center = player.getLocation();
-        player.getWorld().playSound(center, Sound.WEATHER_RAIN, 1.0f, 1.0f);
-        player.getWorld().playSound(center, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 1.0f);
-
-        new BukkitRunnable() {
-            int ticks = 0;
-            final int maxTicks = durationSeconds * 20;
-
-            @Override
-            public void run() {
-                if (ticks >= maxTicks) {
-                    this.cancel();
-                    return;
-                }
-
-                // Spawn 2-3 entities per tick
-                for (int i = 0; i < 3; i++) {
-                    spawnFallingAnimal(center, radius);
-                }
-
-                if (ticks % 10 == 0) {
-                    player.getWorld().spawnParticle(Particle.CLOUD, center.clone().add(0, 10, 0), 50, radius, 1, radius, 0);
-                }
-
-                ticks += 2; // Run every 2 ticks logic
-            }
-        }.runTaskTimer(plugin, 0L, 2L);
 
         // Consume item
         if (event.getItem().getAmount() > 1) {
@@ -66,31 +47,72 @@ public class StormItemAction implements ItemAction {
             player.getInventory().setItem(event.getHand(), null);
         }
 
-        return true;
-    }
+        player.sendMessage("§bThe storm has begun!");
 
-    private void spawnFallingAnimal(Location center, double radius) {
-        double xOffset = (ThreadLocalRandom.current().nextDouble() * radius * 2) - radius;
-        double zOffset = (ThreadLocalRandom.current().nextDouble() * radius * 2) - radius;
-
-        Location spawnLoc = center.clone().add(xOffset, 12, zOffset);
-
-        Entity animal;
-        if (ThreadLocalRandom.current().nextBoolean()) {
-            animal = center.getWorld().spawn(spawnLoc, Cat.class);
-        } else {
-            animal = center.getWorld().spawn(spawnLoc, Wolf.class);
-        }
-
-        // Remove animal after 2 seconds (when they hit ground)
+        // Run the storm
         new BukkitRunnable() {
+            int ticks = 0;
+            // Now using the final variable
+            final int maxTicks = durationSeconds * 20;
+            final List<LivingEntity> activeStormMobs = new ArrayList<>();
+
             @Override
             public void run() {
-                if (animal.isValid()) {
-                    animal.getWorld().spawnParticle(Particle.CLOUD, animal.getLocation(), 5);
-                    animal.remove();
+                if (ticks >= maxTicks) {
+                    // Cleanup remaining mobs
+                    for (LivingEntity entity : activeStormMobs) {
+                        if (entity.isValid()) {
+                            entity.getWorld().spawnParticle(Particle.CLOUD, entity.getLocation(), 5);
+                            entity.remove();
+                        }
+                    }
+                    this.cancel();
+                    return;
                 }
+
+                // Spawn cats/dogs every 5 ticks
+                if (ticks % 5 == 0) {
+                    double offsetX = (random.nextDouble() * radius * 2) - radius;
+                    double offsetZ = (random.nextDouble() * radius * 2) - radius;
+                    Location spawnLoc = center.clone().add(offsetX, rainHeight, offsetZ);
+
+                    LivingEntity stormMob;
+                    // Randomly spawn cat or wolf
+                    if (random.nextBoolean()) {
+                        stormMob = center.getWorld().spawn(spawnLoc, Cat.class);
+                    } else {
+                        stormMob = center.getWorld().spawn(spawnLoc, Wolf.class);
+                    }
+
+                    stormMob.setInvulnerable(true); // Don't take fall damage immediately
+                    activeStormMobs.add(stormMob);
+                }
+
+                // Monitor active mobs for impact
+                activeStormMobs.removeIf(mob -> {
+                    if (!mob.isValid() || mob.isDead()) return true;
+
+                    // Check if on ground
+                    if (mob.isOnGround()) {
+                        mob.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, mob.getLocation(), 1);
+                        mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.5f, 1.5f);
+
+                        // Damage nearby entities
+                        for (Entity nearby : mob.getNearbyEntities(2, 2, 2)) {
+                            if (nearby instanceof LivingEntity && !nearby.equals(player)) {
+                                ((LivingEntity) nearby).damage(damage, player);
+                            }
+                        }
+                        mob.remove();
+                        return true;
+                    }
+                    return false;
+                });
+
+                ticks++;
             }
-        }.runTaskLater(plugin, 40L);
+        }.runTaskTimer(plugin, 0L, 1L);
+
+        return true;
     }
 }

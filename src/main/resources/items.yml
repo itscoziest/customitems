@@ -390,7 +390,8 @@ items:
     name: "&4&lVampire Sword"
     material: IRON_SWORD
     lore:
-      - "&7Heals you on enemy kill"
+      - "&7Has a chance to heal you"
+      - "&7when hitting enemies!"
     damage: 7.0
     cooldown: 0
     combat-cap: 50
@@ -402,7 +403,8 @@ items:
     custom-data:
       type: "vampire_sword"
       consume: false
-      heal-on-kill: 8
+      heal-chance: 25.0    # 25% chance to trigger per hit
+      heal-amount: 2.0     # 2.0 = 1 full heart
 
   # 🥚 Egg Bridger
   egg_bridger:

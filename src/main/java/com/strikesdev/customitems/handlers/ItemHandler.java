@@ -35,7 +35,6 @@ public class ItemHandler {
         itemActions.put("dynamite", new DynamiteAction(plugin));
         itemActions.put("leap", new LeapAction(plugin));
         itemActions.put("creeper", new CreeperAction(plugin));
-        // Removed old vampire_sword action, it is now handled in EntityListener onHit
         itemActions.put("egg_bridger", new EggBridgerAction(plugin));
         itemActions.put("ice_fire", new IceFireAction(plugin));
         itemActions.put("slowness_snowball", new SlownessSnowballAction(plugin));
@@ -58,6 +57,7 @@ public class ItemHandler {
         itemActions.put("cat_cannon", new CatCannonAction(plugin));
         itemActions.put("storm_item", new StormItemAction(plugin));
         itemActions.put("health_soup", new HealthSoupAction(plugin));
+        itemActions.put("fire_sword", new FireSwordAction(plugin)); // Added Fire Sword
     }
 
     public boolean handleItemUse(Player player, CustomItem item, PlayerInteractEvent event) {

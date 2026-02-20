@@ -27,12 +27,11 @@ public class EntityListener implements Listener {
         this.plugin = plugin;
     }
 
-    // --- FIX: TASER PREVENT HIT (Request #6) ---
+    // --- FIX: TASER PREVENT HIT ---
     @EventHandler(priority = EventPriority.HIGH)
     public void onTasedPlayerAttack(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Player) {
             Player attacker = (Player) event.getDamager();
-            // Check if player is tased (Slow + Jump Boost negative + Slow Digging usually indicates taser from this plugin)
             if (attacker.hasPotionEffect(PotionEffectType.SLOW) &&
                     attacker.hasPotionEffect(PotionEffectType.JUMP) &&
                     attacker.hasPotionEffect(PotionEffectType.SLOW_DIGGING)) {
@@ -43,7 +42,7 @@ public class EntityListener implements Listener {
         }
     }
 
-    // --- COMBAT DAMAGE & SWORD EFFECTS (Request #3 & #4) ---
+    // --- COMBAT DAMAGE & SWORD EFFECTS ---
     @EventHandler
     public void onCombatDamage(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player)) return;
@@ -60,7 +59,7 @@ public class EntityListener implements Listener {
 
             String type = customItem.getCustomDataString("type", "");
 
-            // REWORKED VAMPIRE SWORD (On Hit)
+            // VAMPIRE SWORD (On Hit)
             if ("vampire_sword".equals(type)) {
                 double chance = customItem.getCustomDataDouble("heal-chance", 25.0);
                 if (ThreadLocalRandom.current().nextDouble() * 100 <= chance) {
@@ -78,11 +77,13 @@ public class EntityListener implements Listener {
 
             // FIRE SWORD (On Hit)
             if ("fire_sword".equals(type)) {
-                double chance = customItem.getCustomDataDouble("fire-chance", 30.0);
+                double chance = customItem.getCustomDataDouble("fire-chance", 40.0);
                 if (ThreadLocalRandom.current().nextDouble() * 100 <= chance) {
-                    int seconds = customItem.getCustomDataInt("fire-duration", 4);
+                    int seconds = customItem.getCustomDataInt("fire-duration", 5);
+                    // Use setFireTicks (20 ticks = 1 second)
                     event.getEntity().setFireTicks(seconds * 20);
-                    event.getEntity().getWorld().spawnParticle(Particle.FLAME, event.getEntity().getLocation(), 10, 0.3, 0.5, 0.3, 0.05);
+                    event.getEntity().getWorld().spawnParticle(Particle.FLAME, event.getEntity().getLocation(), 15, 0.3, 0.5, 0.3, 0.05);
+                    event.getEntity().getWorld().playSound(event.getEntity().getLocation(), Sound.ITEM_FIRECHARGE_USE, 1.0f, 1.0f);
                 }
             }
         }
@@ -90,7 +91,6 @@ public class EntityListener implements Listener {
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
-        // Removed old vampire sword logic from here
     }
 
     @EventHandler
